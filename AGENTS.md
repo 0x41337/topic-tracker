@@ -22,7 +22,8 @@ bun test                           # unit tests (src/lib/*.test.ts)
 bun run lint                       # eslint
 bun run format                     # prettier — format all code
 bun run format:check               # prettier — check without writing
-bun scripts/smoke.ts               # E2E browser smoke test (needs bun dev running)
+bun scripts/smoke.ts               # E2E browser smoke test (needs a server; see below)
+bun run build && bun run serve     # serve the static export (GitHub Pages layout) for the smoke test
 bun scripts/screenshot.ts          # captures UI screenshots into docs/
 ```
 
@@ -31,23 +32,39 @@ Playwright smoke test requires a browser install on fresh machines:
 
 ## Architecture
 
+Three layers with a strict dependency direction (`core` ← nothing, features
+compose):
+
 - **Single route** — everything renders through `src/app/page.tsx` → `<Explorer />`.
 - **Client-side persistence** — all state lives in `localStorage` (key `tracktree.state.v1`). No server-side data.
 - **Flat node map** — tree structure is a flat `Record<string, TreeNode>` with `parentId` references, not nested objects. This makes moves and subtree deletes simple.
-- **Observable store** — `src/lib/tree-store.ts` is a manual external store (not React state). Components read via `useSyncExternalStore`.
+- **Observable store** — `src/core/store.ts` is a manual external store (not React state). The single React seam is `src/core/store-react.ts` (`useSyncExternalStore`).
+- **Props-driven features** — `features/topic`, `features/dashboard` and `features/practice` never import the explorer; they receive data and emit intents. `features/explorer/components/content/content-pane.tsx` is the only place where features meet.
+- **Single-responsibility hooks** — the explorer composes `hooks/use-*` (expansion, selection, navigation, node-editor, node-deletion, data-management, drag-and-drop, context-menu).
 
 ## Key paths
 
 ```
 src/
-  lib/types.ts          # data model (TreeNode, Session, TreeState)
-  lib/tree-store.ts     # observable store + localStorage persistence
-  lib/tree-utils.ts     # pure helpers (validation, flattening, stats) + tests
-  lib/stats-utils.ts    # daily series, streaks, time-window stats + tests
-  lib/seed.ts           # demo tree shown on first run
+  core/                 # domain layer, zero UI deps, fully unit-tested
+    types.ts            # data model (TreeNode, Session, TreeState)
+    tree.ts             # tree helpers (validation, flattening, moves) + tests
+    stats.ts            # daily series, streaks, time-window stats + tests
+    format.ts           # formatting (percentages, dates)
+    store.ts            # observable store + localStorage persistence
+    store-react.ts      # React bindings (useTreeState, useStoreReady)
+    seed.ts             # demo tree shown on first run
   components/
     ui/                 # shadcn/ui primitives (radix-nova style)
-    explorer/           # all app components (tree, content pane, charts, dialogs)
+    charts/             # generic SVG charts (bar, trend, score bar)
+    stat.tsx            # stat tile with trend indicator
+  features/
+    explorer/           # workspace shell (composition root)
+      hooks/            # single-responsibility behavior hooks
+      components/       # explorer, tree/, content/, toolbar, menus, dialogs
+    topic/              # topic tracker page (props-driven)
+    dashboard/          # cross-topic overview (props-driven)
+    practice/           # hit/miss session recording (props-driven)
   app/
     layout.tsx          # root layout with ThemeProvider + Toaster
     page.tsx            # sole route — renders <Explorer />
@@ -70,5 +87,5 @@ src/
 
 - `next dev` auto-regenerates the `<!-- BEGIN:nextjs-agent-rules -->` block in this file. Commit it as-is to keep the tree clean.
 - The dev server allows cross-origin access for `*.e2b.app` previews (`next.config.ts`).
-- `bun test` only covers the pure utility modules in `src/lib/` (tree-utils, stats-utils). There are no component/integration tests.
+- `bun test` only covers the pure domain modules in `src/core/` (tree, stats). There are no component/integration tests.
 - The `scripts/` directory contains dev/debug helpers (screenshots, smoke test, diagnostics) — not part of the app bundle.

@@ -219,12 +219,9 @@ async function main(): Promise<void> {
         "dashboard ranking opens topic",
         await page.getByText("Hits / Total").isVisible(),
     )
-    await check(
-        "topic score trend rendered",
-        await page
-            .getByRole("img", { name: "Cumulative score trend" })
-            .isVisible(),
-    )
+    const trendChart = page.getByRole("img", { name: "Score over time" })
+    await trendChart.waitFor()
+    await check("topic score trend rendered", await trendChart.isVisible())
     // Navigating from the ranking closes the dashboard automatically.
     await check(
         "dashboard auto-closes on navigation",

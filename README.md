@@ -51,3 +51,36 @@ Open [http://localhost:3000](http://localhost:3000) and start adding your study 
 ## Data
 
 All data **lives in your browser's** localStorage. Use the toolbar menu to export/import JSON backups, load sample data, or clear everything.
+
+## Architecture
+
+The codebase is organized in three layers with a strict dependency direction:
+
+```
+src/
+├── core/          # domain: types, tree, stats, format, seed, store (+ tests)
+├── components/    # shared UI: ui/ (shadcn), charts/, stat
+└── features/      # self-contained modules with a public index.ts
+    ├── explorer/  # workspace shell: hooks/ + tree/ + content/
+    ├── topic/     # tracker page (props-driven)
+    ├── dashboard/ # cross-topic overview (props-driven)
+    └── practice/  # hit/miss recording (props-driven)
+```
+
+Dependency rules:
+
+- `core` imports nothing from the UI layers; it is pure logic and is fully
+  covered by unit tests (`bun test`).
+- `features/topic`, `features/dashboard` and `features/practice` are
+  **props-driven**: they never import the explorer, which makes them easy to
+  replace or embed elsewhere.
+- `features/explorer` is the composition root: it wires the core store into
+  single-responsibility hooks (`use-expansion`, `use-selection`,
+  `use-navigation`, `use-node-editor`, `use-node-deletion`,
+  `use-data-management`, `use-drag-and-drop`, `use-context-menu`) and hosts the
+  other features inside its content pane (`components/content/content-pane.tsx`
+  is the only place where feature components meet).
+
+To add a feature: create `src/features/<name>/` with a public `index.ts`,
+make it props-driven, and host it from the explorer's content pane (or any
+future shell).
