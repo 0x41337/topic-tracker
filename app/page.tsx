@@ -35,7 +35,7 @@ export default function Home() {
                 <ScrollArea className="h-112 w-full">
                     {status === "empty" ? (
                         <div className="flex h-112 w-full items-center justify-center text-sm text-muted-foreground">
-                            No topics found. Right-click to create one.
+                            No topics or folders yet. Use the buttons above to create one.
                         </div>
                     ) : (
                         <TreeExplorer

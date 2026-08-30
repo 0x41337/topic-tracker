@@ -251,9 +251,15 @@ export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeEx
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2 py-2">
                 <div {...tree.getContainerProps()} className="tree relative outline-none">
                     <AssistiveTreeDescription tree={tree} />
-                    {items.map((item) => (
-                        <TreeRow key={item.getId()} item={item} />
-                    ))}
+                    {items.length === 0 ? (
+                        <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                            No topics or folders yet. Use the buttons above to create one.
+                        </div>
+                    ) : (
+                        items.map((item) => (
+                            <TreeRow key={item.getId()} item={item} />
+                        ))
+                    )}
                     <div style={tree.getDragLineStyle()} className="absolute z-10 h-0.5 rounded-full bg-primary" />
                 </div>
 
