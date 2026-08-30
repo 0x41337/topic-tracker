@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
     createOnDropHandler,
     dragAndDropFeature,
@@ -120,6 +120,10 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
             renamingFeature,
         ],
     })
+
+    useEffect(() => {
+        tree.rebuildTree()
+    }, [tree, filteredIds])
 
     const deleteItems = useCallback(
         (ids: string[]) => {
