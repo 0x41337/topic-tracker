@@ -42,5 +42,11 @@ export function usePerformance(topicId: string | null) {
         await load()
     }, [topicId, today, load])
 
-    return { score, recordHit, recordMiss }
+    const undoLastAction = useCallback(async () => {
+        if (!topicId) return
+        const undone = await repo.undoLastAction(topicId, today)
+        if (undone) await load()
+    }, [topicId, today, load])
+
+    return { score, recordHit, recordMiss, undoLastAction }
 }

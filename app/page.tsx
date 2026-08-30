@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { FilePlus2Icon, FolderPlusIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react"
+import { FilePlus2Icon, FolderPlusIcon, PencilIcon, Trash2Icon, Undo2Icon, XIcon } from "lucide-react"
 
 import { useTreeData } from "@/lib/hooks/use-tree-data"
 import { useTreeExplorer, TreeView } from "@/app/components/tree-explorer"
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 export default function Home() {
     const { data, status, setData } = useTreeData()
     const [focusedItem, setFocusedItem] = useState<TreeNodeData | null>(null)
-    const { score, recordHit, recordMiss } = usePerformance(focusedItem?.type === "topic" ? focusedItem.id : null)
+    const { score, recordHit, recordMiss, undoLastAction } = usePerformance(focusedItem?.type === "topic" ? focusedItem.id : null)
 
     const {
         tree,
@@ -89,6 +89,11 @@ export default function Home() {
                                 <Button variant="outline" onClick={recordMiss}>
                                     Miss
                                 </Button>
+                                {score.total > 0 && (
+                                    <Button variant="ghost" size="icon-xs" onClick={undoLastAction} title="Undo last action">
+                                        <Undo2Icon />
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     )}

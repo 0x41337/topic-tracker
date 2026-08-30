@@ -50,6 +50,18 @@ export class DexiePerformanceRepository implements PerformanceRepository {
         }
     }
 
+    async undoLastAction(topicId: string, date: string): Promise<boolean> {
+        const existing = await db.performances.get({ topicId, date })
+        if (!existing || existing.total === 0) return false
+
+        const wasHit = existing.hits === existing.total
+        await db.performances.update([topicId, date], {
+            hits: wasHit ? existing.hits - 1 : existing.hits,
+            total: existing.total - 1,
+        })
+        return true
+    }
+
     async getHistory(topicId: string): Promise<PerformanceRecord[]> {
         return db.performances.where("topicId").equals(topicId).toArray()
     }
