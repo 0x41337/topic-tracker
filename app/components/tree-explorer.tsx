@@ -10,36 +10,27 @@ import {
     selectionFeature,
     syncDataLoaderFeature,
     type ItemInstance,
+    type TreeInstance,
 } from "@headless-tree/core"
 import { AssistiveTreeDescription, useTree } from "@headless-tree/react"
-import {
-    FileIcon,
-    FilePlus2Icon,
-    FolderIcon,
-    FolderOpenIcon,
-    FolderPlusIcon,
-    PencilIcon,
-    Trash2Icon,
-    XIcon,
-} from "lucide-react"
+import { FileIcon, FolderIcon, FolderOpenIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { collectDescendantIds, createNodeId, getUniqueName } from "@/lib/core/tree-data"
 import { ROOT_ID, type TreeDataMap, type TreeItemType, type TreeNodeData } from "@/lib/core/tree-types"
-import { SearchBar } from "@/app/components/search-bar"
-
-interface TreeExplorerProps {
-    data: TreeDataMap
-    onDataChange: (updater: (prev: TreeDataMap) => TreeDataMap) => void
-    onFocusedItemChange?: (item: TreeNodeData | null) => void
-}
 
 const DEFAULT_NAMES: Record<TreeItemType, string> = {
     folder: "New Folder",
     topic: "New Topic",
 }
 
-export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeExplorerProps) {
+export interface UseTreeExplorerOptions {
+    data: TreeDataMap
+    onDataChange: (updater: (prev: TreeDataMap) => TreeDataMap) => void
+    onFocusedItemChange?: (item: TreeNodeData | null) => void
+}
+
+export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: UseTreeExplorerOptions) {
     const [search, setSearch] = useState("")
 
     const filteredIds = useMemo(() => {
@@ -65,6 +56,49 @@ export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeEx
         }
         return result
     }, [data, search])
+
+    const commitRename = useCallback(
+        (id: string, rawValue: string) => {
+            onDataChange((prev) => {
+                const node = prev[id]
+                if (!node) return prev
+                const parent = Object.values(prev).find((n) => n.type === "folder" && n.children?.includes(id))
+                const siblingNames = (parent?.children ?? []).filter((cid) => cid !== id).map((cid) => prev[cid]?.name ?? "")
+                const trimmed = rawValue.trim()
+                const base = trimmed.length > 0 ? trimmed : DEFAULT_NAMES[node.type]
+                const name = getUniqueName(base, siblingNames, node.name)
+                if (name === node.name) return prev
+                return { ...prev, [id]: { ...node, name } }
+            })
+        },
+        [onDataChange],
+    )
+
+    const deleteItems = useCallback(
+        (ids: string[]) => {
+            const targetIds = ids.filter((id) => id !== ROOT_ID)
+            if (targetIds.length === 0) return
+
+            onDataChange((prev) => {
+                const toDelete = new Set<string>()
+                targetIds.forEach((id) => {
+                    toDelete.add(id)
+                    collectDescendantIds(id, prev, toDelete)
+                })
+
+                const next: TreeDataMap = {}
+                for (const [id, node] of Object.entries(prev)) {
+                    if (toDelete.has(id)) continue
+                    next[id] = node.type === "folder" ? { ...node, children: (node.children ?? []).filter((c) => !toDelete.has(c)) } : node
+                }
+                return next
+            })
+
+            tree.setSelectedItems([])
+            tree.scheduleRebuildTree()
+        },
+        [onDataChange],
+    )
 
     const tree = useTree<TreeNodeData>({
         rootItemId: ROOT_ID,
@@ -167,49 +201,6 @@ export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeEx
         [onDataChange, resolveCreationParent, tree, search],
     )
 
-    const commitRename = useCallback(
-        (id: string, rawValue: string) => {
-            onDataChange((prev) => {
-                const node = prev[id]
-                if (!node) return prev
-                const parent = Object.values(prev).find((n) => n.type === "folder" && n.children?.includes(id))
-                const siblingNames = (parent?.children ?? []).filter((cid) => cid !== id).map((cid) => prev[cid]?.name ?? "")
-                const trimmed = rawValue.trim()
-                const base = trimmed.length > 0 ? trimmed : DEFAULT_NAMES[node.type]
-                const name = getUniqueName(base, siblingNames, node.name)
-                if (name === node.name) return prev
-                return { ...prev, [id]: { ...node, name } }
-            })
-        },
-        [onDataChange],
-    )
-
-    const deleteItems = useCallback(
-        (ids: string[]) => {
-            const targetIds = ids.filter((id) => id !== ROOT_ID)
-            if (targetIds.length === 0) return
-
-            onDataChange((prev) => {
-                const toDelete = new Set<string>()
-                targetIds.forEach((id) => {
-                    toDelete.add(id)
-                    collectDescendantIds(id, prev, toDelete)
-                })
-
-                const next: TreeDataMap = {}
-                for (const [id, node] of Object.entries(prev)) {
-                    if (toDelete.has(id)) continue
-                    next[id] = node.type === "folder" ? { ...node, children: (node.children ?? []).filter((c) => !toDelete.has(c)) } : node
-                }
-                return next
-            })
-
-            tree.setSelectedItems([])
-            tree.scheduleRebuildTree()
-        },
-        [onDataChange, tree],
-    )
-
     const deleteSelectionOrFocused = useCallback(() => {
         const selected = tree.getState().selectedItems ?? []
         if (selected.length > 0) {
@@ -232,120 +223,35 @@ export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeEx
     const selectedCount = selectedItems.length
     const canRename = selectedCount === 1 && selectedItems[0] !== ROOT_ID
 
-    return (
-        <div className="flex h-full flex-col">
-            <Toolbar
-                selectedCount={selectedCount}
-                canRename={canRename}
-                onNewFolder={() => createItem("folder")}
-                onNewTopic={() => createItem("topic")}
-                onRename={startRenameSelected}
-                onClearSelection={() => tree.setSelectedItems([])}
-                onDeleteSelected={() => deleteItems(selectedItems)}
-            />
-
-            <div className="px-2 py-2">
-                <SearchBar value={search} onChange={setSearch} />
-            </div>
-
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-2 py-2">
-                <div {...tree.getContainerProps()} className="tree relative outline-none">
-                    <AssistiveTreeDescription tree={tree} />
-                    {items.length === 0 ? (
-                        <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-                            No topics or folders yet. Use the buttons above to create one.
-                        </div>
-                    ) : (
-                        items.map((item) => (
-                            <TreeRow key={item.getId()} item={item} />
-                        ))
-                    )}
-                    <div style={tree.getDragLineStyle()} className="absolute z-10 h-0.5 rounded-full bg-primary" />
-                </div>
-
-                <div className="min-h-16 w-full flex-1" onClick={() => tree.setSelectedItems([])} />
-            </div>
-        </div>
-    )
+    return {
+        tree,
+        items,
+        search,
+        setSearch,
+        selectedItems,
+        selectedCount,
+        canRename,
+        createItem,
+        deleteItems: () => deleteItems(selectedItems),
+        startRenameSelected,
+        clearSelection: () => tree.setSelectedItems([]),
+    }
 }
 
-function Toolbar({
-    selectedCount,
-    canRename,
-    onNewFolder,
-    onNewTopic,
-    onRename,
-    onClearSelection,
-    onDeleteSelected,
-}: {
-    selectedCount: number
-    canRename: boolean
-    onNewFolder: () => void
-    onNewTopic: () => void
-    onRename: () => void
-    onClearSelection: () => void
-    onDeleteSelected: () => void
-}) {
+export function TreeView({ tree, items }: { tree: TreeInstance<TreeNodeData>; items: ReturnType<typeof tree.getItems> }) {
     return (
-        <div className="flex flex-col gap-2 border-b px-3 py-2.5">
-            <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Explorer</span>
-                <div className="flex items-center gap-1">
-                    <button
-                        type="button"
-                        onClick={onNewFolder}
-                        title="New folder"
-                        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                        <FolderPlusIcon className="h-4 w-4" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onNewTopic}
-                        title="New topic"
-                        className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                    >
-                        <FilePlus2Icon className="h-4 w-4" />
-                    </button>
+        <div {...tree.getContainerProps()} className="tree relative outline-none">
+            <AssistiveTreeDescription tree={tree} />
+            {items.length === 0 ? (
+                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
+                    No topics or folders yet. Use the buttons above to create one.
                 </div>
-            </div>
-
-            {selectedCount > 0 && (
-                <div className="flex items-center justify-between gap-2 rounded-md bg-accent px-2 py-1.5">
-                    <span className="text-xs font-medium text-accent-foreground">
-                        {selectedCount} {selectedCount === 1 ? "item selected" : "items selected"}
-                    </span>
-                    <div className="flex items-center gap-1">
-                        {canRename && (
-                            <button
-                                type="button"
-                                onClick={onRename}
-                                className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-accent-foreground hover:bg-accent/80"
-                                title="Rename (F2)"
-                            >
-                                <PencilIcon className="h-3.5 w-3.5" />
-                                Rename
-                            </button>
-                        )}
-                        <button
-                            type="button"
-                            onClick={onDeleteSelected}
-                            className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-                        >
-                            <Trash2Icon className="h-3.5 w-3.5" />
-                            Delete
-                        </button>
-                        <button
-                            type="button"
-                            onClick={onClearSelection}
-                            className="flex items-center justify-center rounded-md p-1 text-accent-foreground hover:bg-accent/80"
-                            title="Clear selection"
-                        >
-                            <XIcon className="h-3.5 w-3.5" />
-                        </button>
-                    </div>
-                </div>
+            ) : (
+                items.map((item) => (
+                    <TreeRow key={item.getId()} item={item} />
+                ))
             )}
+            <div style={tree.getDragLineStyle()} className="absolute z-10 h-0.5 rounded-full bg-primary" />
         </div>
     )
 }
