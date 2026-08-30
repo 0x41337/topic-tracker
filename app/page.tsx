@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
 
 import {
     FilePlus2Icon,
@@ -63,30 +64,46 @@ export default function Home() {
     return (
         <div className="flex flex-col w-full">
             <div className="flex min-h-screen w-full flex-col gap-5 p-4">
-                {focusedItem && (
-                    <>
-                        <TopicMetadataCard item={focusedItem} />
+                <AnimatePresence mode="wait">
+                    {focusedItem && (
+                        <motion.div
+                            key={focusedItem.id}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex flex-col gap-5"
+                        >
+                            <TopicMetadataCard item={focusedItem} />
 
-                        {focusedItem.type === "topic" && (
-                            <>
-                                <TopicStatsCard history={history} />
+                            {focusedItem.type === "topic" && (
+                                <>
+                                    <TopicStatsCard history={history} />
 
-                                <TopicSessionCard
-                                    score={score}
-                                    onHit={recordHit}
-                                    onMiss={recordMiss}
-                                    onUndo={undoLastAction}
-                                />
-                            </>
-                        )}
-                    </>
-                )}
+                                    <TopicSessionCard
+                                        score={score}
+                                        onHit={recordHit}
+                                        onMiss={recordMiss}
+                                        onUndo={undoLastAction}
+                                    />
+                                </>
+                            )}
+                        </motion.div>
+                    )}
 
-                {!focusedItem && (
-                    <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-                        Click an item in the tree to see its details here.
-                    </div>
-                )}
+                    {!focusedItem && (
+                        <motion.div
+                            key="empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground"
+                        >
+                            Click an item in the tree to see its details here.
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div className="w-full rounded-md border p-1.5">
                     <div className="flex flex-col gap-2 border-b px-3 py-2.5">
