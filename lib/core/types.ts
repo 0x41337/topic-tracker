@@ -3,6 +3,7 @@ export interface TopicNode {
     name: string
     parentId: string | null
     isFolder: boolean
+    createdAt: string
 }
 
 export interface PerformanceRecord {

@@ -19,6 +19,7 @@ function nodesToTreeDataMap(nodes: TopicNode[]): TreeDataMap {
             children: node.isFolder
                 ? nodes.filter((n) => n.parentId === node.id).map((n) => n.id)
                 : undefined,
+            createdAt: node.createdAt,
         }
     }
 
@@ -50,6 +51,7 @@ function treeDataMapToNodes(data: TreeDataMap): TopicNode[] {
             name: node.name,
             parentId: parentId === ROOT_ID ? null : parentId,
             isFolder: node.type === "folder",
+            createdAt: node.createdAt ?? new Date().toISOString(),
         })
     }
 

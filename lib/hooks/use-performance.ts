@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { Score } from "../core/types"
+import type { PerformanceRecord, Score } from "../core/types"
 import { calculateScore, getToday } from "../core/score"
 import { DexiePerformanceRepository } from "../infra/performance-repository"
 
@@ -13,17 +13,21 @@ export function usePerformance(topicId: string | null) {
         total: 0,
         value: NaN,
     })
+    const [history, setHistory] = useState<PerformanceRecord[]>([])
     const today = useMemo(() => getToday(), [])
 
     const load = useCallback(async () => {
         if (!topicId) {
             setScore({ hits: 0, total: 0, value: NaN })
+            setHistory([])
             return
         }
         const record = await repo.get(topicId, today)
         setScore(
             calculateScore(record?.hits ?? 0, record?.total ?? 0),
         )
+        const allRecords = await repo.getHistory(topicId)
+        setHistory(allRecords.sort((a, b) => b.date.localeCompare(a.date)))
     }, [topicId, today])
 
     useEffect(() => {
@@ -48,5 +52,5 @@ export function usePerformance(topicId: string | null) {
         if (undone) await load()
     }, [topicId, today, load])
 
-    return { score, recordHit, recordMiss, undoLastAction }
+    return { score, history, recordHit, recordMiss, undoLastAction }
 }

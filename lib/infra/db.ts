@@ -8,7 +8,7 @@ class TopicTrackerDB extends Dexie {
     constructor() {
         super("topic-tracker")
         this.version(1).stores({
-            topics: "id, parentId",
+            topics: "id, parentId, createdAt",
             performances: "[topicId+date], topicId, date",
         })
     }

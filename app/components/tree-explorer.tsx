@@ -180,7 +180,9 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
                 const targetId = parent ? parentId : ROOT_ID
                 const siblingNames = (prev[targetId]?.children ?? []).map((cid) => prev[cid]?.name ?? "")
                 const name = getUniqueName(base, siblingNames)
-                const newNode: TreeNodeData = type === "folder" ? { id, name, type, children: [] } : { id, name, type }
+                const newNode: TreeNodeData = type === "folder"
+                    ? { id, name, type, children: [], createdAt: new Date().toISOString() }
+                    : { id, name, type, createdAt: new Date().toISOString() }
 
                 return {
                     ...prev,

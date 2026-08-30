@@ -5,6 +5,7 @@ export interface TreeNodeData {
     name: string
     type: TreeItemType
     children?: string[]
+    createdAt?: string
 }
 
 export type TreeDataMap = Record<string, TreeNodeData>
