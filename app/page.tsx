@@ -68,15 +68,17 @@ export default function Home() {
                         <TopicMetadataCard item={focusedItem} />
 
                         {focusedItem.type === "topic" && (
-                            <TopicStatsCard history={history} />
-                        )}
+                            <>
+                                <TopicStatsCard history={history} />
 
-                        <TopicSessionCard
-                            score={score}
-                            onHit={recordHit}
-                            onMiss={recordMiss}
-                            onUndo={undoLastAction}
-                        />
+                                <TopicSessionCard
+                                    score={score}
+                                    onHit={recordHit}
+                                    onMiss={recordMiss}
+                                    onUndo={undoLastAction}
+                                />
+                            </>
+                        )}
                     </>
                 )}
 
