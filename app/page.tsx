@@ -1,13 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import {
-    FilePlus2Icon,
-    FolderPlusIcon,
-    PencilIcon,
-    Trash2Icon,
-    XIcon,
-} from "lucide-react"
+import { FilePlus2Icon, FolderPlusIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react"
 
 import { useTreeData } from "@/lib/hooks/use-tree-data"
 import { useTreeExplorer, TreeView } from "@/app/components/tree-explorer"
@@ -15,6 +9,7 @@ import type { TreeNodeData } from "@/lib/core/tree-types"
 import { usePerformance } from "@/lib/hooks/use-performance"
 import { SearchBar } from "@/app/components/search-bar"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
 
 export default function Home() {
     const { data, status, setData } = useTreeData()
@@ -57,58 +52,58 @@ export default function Home() {
                     <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Explorer</span>
                         <div className="flex items-center gap-1">
-                            <button
-                                type="button"
+                            <Button
+                                variant="ghost"
+                                size="icon-xs"
                                 onClick={() => createItem("folder")}
                                 title="New folder"
-                                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                             >
-                                <FolderPlusIcon className="h-4 w-4" />
-                            </button>
-                            <button
-                                type="button"
+                                <FolderPlusIcon />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon-xs"
                                 onClick={() => createItem("topic")}
                                 title="New topic"
-                                className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
                             >
-                                <FilePlus2Icon className="h-4 w-4" />
-                            </button>
+                                <FilePlus2Icon />
+                            </Button>
                         </div>
                     </div>
 
                     {selectedCount > 0 && (
-                        <div className="flex items-center justify-between gap-2 rounded-md bg-accent px-2 py-1.5">
-                            <span className="text-xs font-medium text-accent-foreground">
+                        <div className="flex items-center justify-between gap-2 rounded-md bg-muted px-2 py-1.5">
+                            <span className="text-xs font-medium text-muted-foreground">
                                 {selectedCount} {selectedCount === 1 ? "item selected" : "items selected"}
                             </span>
                             <div className="flex items-center gap-1">
                                 {canRename && (
-                                    <button
-                                        type="button"
+                                    <Button
+                                        variant="ghost"
+                                        size="xs"
                                         onClick={startRenameSelected}
-                                        className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-accent-foreground hover:bg-accent/80"
                                         title="Rename (F2)"
                                     >
-                                        <PencilIcon className="h-3.5 w-3.5" />
+                                        <PencilIcon />
                                         Rename
-                                    </button>
+                                    </Button>
                                 )}
-                                <button
-                                    type="button"
+                                <Button
+                                    variant="ghost"
+                                    size="xs"
                                     onClick={deleteItems}
-                                    className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
                                 >
-                                    <Trash2Icon className="h-3.5 w-3.5" />
+                                    <Trash2Icon />
                                     Delete
-                                </button>
-                                <button
-                                    type="button"
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="icon-xs"
                                     onClick={clearSelection}
-                                    className="flex items-center justify-center rounded-md p-1 text-accent-foreground hover:bg-accent/80"
                                     title="Clear selection"
                                 >
-                                    <XIcon className="h-3.5 w-3.5" />
-                                </button>
+                                    <XIcon />
+                                </Button>
                             </div>
                         </div>
                     )}
@@ -122,7 +117,6 @@ export default function Home() {
                     <div className="px-2 py-2">
                         <TreeView tree={tree} items={items} />
                     </div>
-                    <div className="min-h-16 w-full flex-1" onClick={clearSelection} />
                 </ScrollArea>
             </div>
 
@@ -162,20 +156,12 @@ export default function Home() {
                             )}
 
                             <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={recordHit}
-                                    className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                                >
+                                <Button onClick={recordHit}>
                                     Hit
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={recordMiss}
-                                    className="rounded-md border px-3 py-1.5 text-sm font-medium hover:bg-accent"
-                                >
+                                </Button>
+                                <Button variant="outline" onClick={recordMiss}>
                                     Miss
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     )}

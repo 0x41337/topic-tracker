@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 import {
     createOnDropHandler,
     dragAndDropFeature,
@@ -74,32 +74,6 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
         [onDataChange],
     )
 
-    const deleteItems = useCallback(
-        (ids: string[]) => {
-            const targetIds = ids.filter((id) => id !== ROOT_ID)
-            if (targetIds.length === 0) return
-
-            onDataChange((prev) => {
-                const toDelete = new Set<string>()
-                targetIds.forEach((id) => {
-                    toDelete.add(id)
-                    collectDescendantIds(id, prev, toDelete)
-                })
-
-                const next: TreeDataMap = {}
-                for (const [id, node] of Object.entries(prev)) {
-                    if (toDelete.has(id)) continue
-                    next[id] = node.type === "folder" ? { ...node, children: (node.children ?? []).filter((c) => !toDelete.has(c)) } : node
-                }
-                return next
-            })
-
-            tree.setSelectedItems([])
-            tree.scheduleRebuildTree()
-        },
-        [onDataChange],
-    )
-
     const tree = useTree<TreeNodeData>({
         rootItemId: ROOT_ID,
         canReorder: !search.trim(),
@@ -146,6 +120,32 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
             renamingFeature,
         ],
     })
+
+    const deleteItems = useCallback(
+        (ids: string[]) => {
+            const targetIds = ids.filter((id) => id !== ROOT_ID)
+            if (targetIds.length === 0) return
+
+            onDataChange((prev) => {
+                const toDelete = new Set<string>()
+                targetIds.forEach((id) => {
+                    toDelete.add(id)
+                    collectDescendantIds(id, prev, toDelete)
+                })
+
+                const next: TreeDataMap = {}
+                for (const [id, node] of Object.entries(prev)) {
+                    if (toDelete.has(id)) continue
+                    next[id] = node.type === "folder" ? { ...node, children: (node.children ?? []).filter((c) => !toDelete.has(c)) } : node
+                }
+                return next
+            })
+
+            tree.setSelectedItems([])
+            tree.scheduleRebuildTree()
+        },
+        [onDataChange, tree],
+    )
 
     const resolveCreationParent = useCallback(
         (explicitParentId?: string): string => {
@@ -239,8 +239,24 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
 }
 
 export function TreeView({ tree, items }: { tree: TreeInstance<TreeNodeData>; items: ReturnType<typeof tree.getItems> }) {
+    const containerRef = useRef<HTMLDivElement>(null)
+
+    const handleContainerClick = useCallback(
+        (e: React.MouseEvent) => {
+            if (e.target === containerRef.current) {
+                tree.setSelectedItems([])
+            }
+        },
+        [tree],
+    )
+
     return (
-        <div {...tree.getContainerProps()} className="tree relative outline-none">
+        <div
+            ref={containerRef}
+            {...tree.getContainerProps()}
+            className="tree relative min-h-32 outline-none"
+            onClick={handleContainerClick}
+        >
             <AssistiveTreeDescription tree={tree} />
             {items.length === 0 ? (
                 <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
