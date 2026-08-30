@@ -65,18 +65,18 @@ export default function Home() {
             <div className="flex min-h-screen w-full flex-col gap-5 p-4">
                 {focusedItem && (
                     <>
+                        <TopicMetadataCard item={focusedItem} />
+
+                        {focusedItem.type === "topic" && (
+                            <TopicStatsCard history={history} />
+                        )}
+
                         <TopicSessionCard
                             score={score}
                             onHit={recordHit}
                             onMiss={recordMiss}
                             onUndo={undoLastAction}
                         />
-
-                        <TopicMetadataCard item={focusedItem} />
-
-                        {focusedItem.type === "topic" && (
-                            <TopicStatsCard history={history} />
-                        )}
                     </>
                 )}
 

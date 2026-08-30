@@ -24,7 +24,7 @@ export function TopicSessionCard({
     useEffect(() => {
         if (prevScoreRef.current !== score.value && !isNaN(score.value)) {
             setScoreAnimation(true)
-            const timer = setTimeout(() => setScoreAnimation(false), 300)
+            const timer = setTimeout(() => setScoreAnimation(false), 150)
             prevScoreRef.current = score.value
             return () => clearTimeout(timer)
         }
@@ -32,13 +32,13 @@ export function TopicSessionCard({
 
     const handleHit = () => {
         setHitAnimation(true)
-        setTimeout(() => setHitAnimation(false), 200)
+        setTimeout(() => setHitAnimation(false), 100)
         onHit()
     }
 
     const handleMiss = () => {
         setMissAnimation(true)
-        setTimeout(() => setMissAnimation(false), 200)
+        setTimeout(() => setMissAnimation(false), 100)
         onMiss()
     }
 
@@ -49,8 +49,8 @@ export function TopicSessionCard({
             <div className="flex items-center justify-center gap-8">
                 <button
                     onClick={handleHit}
-                    className={`flex h-24 w-24 items-center justify-center rounded-full bg-green-500 text-white text-2xl font-bold transition-all hover:bg-green-600 active:scale-95 ${
-                        hitAnimation ? "scale-110 bg-green-400" : ""
+                    className={`flex h-24 w-24 items-center justify-center rounded-full bg-primary text-primary-foreground text-2xl font-bold transition-all duration-100 hover:bg-primary/90 active:scale-95 ${
+                        hitAnimation ? "scale-110" : ""
                     }`}
                 >
                     HIT
@@ -58,7 +58,7 @@ export function TopicSessionCard({
 
                 <div className="flex flex-col items-center">
                     <div
-                        className={`text-4xl font-bold tabular-nums transition-transform ${
+                        className={`text-4xl font-bold tabular-nums transition-all duration-150 ${
                             scoreAnimation ? "scale-125 text-primary" : ""
                         }`}
                     >
@@ -72,8 +72,8 @@ export function TopicSessionCard({
 
                 <button
                     onClick={handleMiss}
-                    className={`flex h-24 w-24 items-center justify-center rounded-full bg-red-500 text-white text-2xl font-bold transition-all hover:bg-red-600 active:scale-95 ${
-                        missAnimation ? "scale-110 bg-red-400" : ""
+                    className={`flex h-24 w-24 items-center justify-center rounded-full bg-muted text-muted-foreground text-2xl font-bold transition-all duration-100 hover:bg-muted/80 active:scale-95 ${
+                        missAnimation ? "scale-110" : ""
                     }`}
                 >
                     MISS
