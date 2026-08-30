@@ -123,7 +123,7 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
 
     useEffect(() => {
         tree.rebuildTree()
-    }, [tree, filteredIds])
+    }, [tree, filteredIds, data])
 
     const deleteItems = useCallback(
         (ids: string[]) => {
