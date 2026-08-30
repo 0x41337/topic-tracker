@@ -13,11 +13,25 @@ import {
     type TreeInstance,
 } from "@headless-tree/core"
 import { AssistiveTreeDescription, useTree } from "@headless-tree/react"
-import { FileIcon, FolderIcon, FolderOpenIcon } from "lucide-react"
+import {
+    ChevronRightIcon,
+    FileIcon,
+    FolderIcon,
+    FolderOpenIcon,
+} from "lucide-react"
 
 import { cn } from "@/lib/utils"
-import { collectDescendantIds, createNodeId, getUniqueName } from "@/lib/core/tree-data"
-import { ROOT_ID, type TreeDataMap, type TreeItemType, type TreeNodeData } from "@/lib/core/tree-types"
+import {
+    collectDescendantIds,
+    createNodeId,
+    getUniqueName,
+} from "@/lib/core/tree-data"
+import {
+    ROOT_ID,
+    type TreeDataMap,
+    type TreeItemType,
+    type TreeNodeData,
+} from "@/lib/core/tree-types"
 
 const DEFAULT_NAMES: Record<TreeItemType, string> = {
     folder: "New Folder",
@@ -30,7 +44,11 @@ export interface UseTreeExplorerOptions {
     onFocusedItemChange?: (item: TreeNodeData | null) => void
 }
 
-export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: UseTreeExplorerOptions) {
+export function useTreeExplorer({
+    data,
+    onDataChange,
+    onFocusedItemChange,
+}: UseTreeExplorerOptions) {
     const [search, setSearch] = useState("")
 
     const filteredIds = useMemo(() => {
@@ -49,7 +67,9 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
                     if (result.has(parentId)) break
                     result.add(parentId)
                     parentId = Object.values(data).find(
-                        (n) => n.type === "folder" && n.children?.includes(parentId!),
+                        (n) =>
+                            n.type === "folder" &&
+                            n.children?.includes(parentId!),
                     )?.id
                 }
             }
@@ -62,10 +82,15 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
             onDataChange((prev) => {
                 const node = prev[id]
                 if (!node) return prev
-                const parent = Object.values(prev).find((n) => n.type === "folder" && n.children?.includes(id))
-                const siblingNames = (parent?.children ?? []).filter((cid) => cid !== id).map((cid) => prev[cid]?.name ?? "")
+                const parent = Object.values(prev).find(
+                    (n) => n.type === "folder" && n.children?.includes(id),
+                )
+                const siblingNames = (parent?.children ?? [])
+                    .filter((cid) => cid !== id)
+                    .map((cid) => prev[cid]?.name ?? "")
                 const trimmed = rawValue.trim()
-                const base = trimmed.length > 0 ? trimmed : DEFAULT_NAMES[node.type]
+                const base =
+                    trimmed.length > 0 ? trimmed : DEFAULT_NAMES[node.type]
                 const name = getUniqueName(base, siblingNames, node.name)
                 if (name === node.name) return prev
                 return { ...prev, [id]: { ...node, name } }
@@ -92,7 +117,10 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
         onDrop: createOnDropHandler((parentItem, newChildrenIds) => {
             onDataChange((prev) => ({
                 ...prev,
-                [parentItem.getId()]: { ...prev[parentItem.getId()], children: newChildrenIds },
+                [parentItem.getId()]: {
+                    ...prev[parentItem.getId()],
+                    children: newChildrenIds,
+                },
             }))
         }),
         onRename: (item, value) => {
@@ -140,7 +168,15 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
                 const next: TreeDataMap = {}
                 for (const [id, node] of Object.entries(prev)) {
                     if (toDelete.has(id)) continue
-                    next[id] = node.type === "folder" ? { ...node, children: (node.children ?? []).filter((c) => !toDelete.has(c)) } : node
+                    next[id] =
+                        node.type === "folder"
+                            ? {
+                                  ...node,
+                                  children: (node.children ?? []).filter(
+                                      (c) => !toDelete.has(c),
+                                  ),
+                              }
+                            : node
                 }
                 return next
             })
@@ -178,16 +214,33 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
             onDataChange((prev) => {
                 const parent = prev[parentId] ?? prev[ROOT_ID]
                 const targetId = parent ? parentId : ROOT_ID
-                const siblingNames = (prev[targetId]?.children ?? []).map((cid) => prev[cid]?.name ?? "")
+                const siblingNames = (prev[targetId]?.children ?? []).map(
+                    (cid) => prev[cid]?.name ?? "",
+                )
                 const name = getUniqueName(base, siblingNames)
-                const newNode: TreeNodeData = type === "folder"
-                    ? { id, name, type, children: [], createdAt: new Date().toISOString() }
-                    : { id, name, type, createdAt: new Date().toISOString() }
+                const newNode: TreeNodeData =
+                    type === "folder"
+                        ? {
+                              id,
+                              name,
+                              type,
+                              children: [],
+                              createdAt: new Date().toISOString(),
+                          }
+                        : {
+                              id,
+                              name,
+                              type,
+                              createdAt: new Date().toISOString(),
+                          }
 
                 return {
                     ...prev,
                     [id]: newNode,
-                    [targetId]: { ...prev[targetId], children: [...(prev[targetId]?.children ?? []), id] },
+                    [targetId]: {
+                        ...prev[targetId],
+                        children: [...(prev[targetId]?.children ?? []), id],
+                    },
                 }
             })
 
@@ -244,7 +297,13 @@ export function useTreeExplorer({ data, onDataChange, onFocusedItemChange }: Use
     }
 }
 
-export function TreeView({ tree, items }: { tree: TreeInstance<TreeNodeData>; items: ReturnType<typeof tree.getItems> }) {
+export function TreeView({
+    tree,
+    items,
+}: {
+    tree: TreeInstance<TreeNodeData>
+    items: ReturnType<typeof tree.getItems>
+}) {
     const containerRef = useRef<HTMLDivElement>(null)
 
     const handleContainerClick = useCallback(
@@ -265,15 +324,21 @@ export function TreeView({ tree, items }: { tree: TreeInstance<TreeNodeData>; it
         >
             <AssistiveTreeDescription tree={tree} />
             {items.length === 0 ? (
-                <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
-                    No topics or folders yet. Use the buttons above to create one.
+                <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
+                    <FolderIcon className="h-6 w-6 text-muted-foreground/40" />
+                    <span>
+                        No topics or folders yet.
+                        <br />
+                        Use the buttons above to create one.
+                    </span>
                 </div>
             ) : (
-                items.map((item) => (
-                    <TreeRow key={item.getId()} item={item} />
-                ))
+                items.map((item) => <TreeRow key={item.getId()} item={item} />)
             )}
-            <div style={tree.getDragLineStyle()} className="absolute z-10 h-0.5 rounded-full bg-primary" />
+            <div
+                style={tree.getDragLineStyle()}
+                className="absolute z-10 h-[3px] -translate-y-1/2 rounded-full bg-primary shadow-sm"
+            />
         </div>
     )
 }
@@ -281,15 +346,18 @@ export function TreeView({ tree, items }: { tree: TreeInstance<TreeNodeData>; it
 function TreeRow({ item }: { item: ItemInstance<TreeNodeData> }) {
     const isFolder = item.isFolder()
     const level = item.getItemMeta().level
+    const isExpanded = item.isExpanded()
 
     if (item.isRenaming()) {
         const inputProps = item.getRenameInputProps()
         return (
             <div
-                className="flex items-center gap-1.5 rounded-md bg-background py-1 pr-2 ring-1 ring-ring"
+                className="relative flex items-center gap-1.5 py-1 pr-2"
                 style={{ paddingLeft: `${level * 18 + 8}px` }}
             >
-                <RowIcon isFolder={isFolder} isExpanded={item.isExpanded()} />
+                <TreeGuides level={level} />
+                <span className="w-3.5 shrink-0" />
+                <RowIcon isFolder={isFolder} isExpanded={isExpanded} />
                 <input
                     {...inputProps}
                     placeholder={isFolder ? "New Folder" : "New Topic"}
@@ -297,7 +365,7 @@ function TreeRow({ item }: { item: ItemInstance<TreeNodeData> }) {
                     onBlur={() => {
                         item.getTree().completeRenaming()
                     }}
-                    className="min-w-0 flex-1 rounded border border-input bg-background px-1.5 py-0.5 text-sm text-foreground outline-none"
+                    className="min-w-0 flex-1 rounded-md border border-ring bg-background px-1.5 py-0.5 text-sm text-foreground shadow-sm outline-none ring-2 ring-ring/20"
                 />
             </div>
         )
@@ -308,19 +376,55 @@ function TreeRow({ item }: { item: ItemInstance<TreeNodeData> }) {
             {...item.getProps()}
             style={{ paddingLeft: `${level * 18 + 8}px` }}
             className={cn(
-                "flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-sm outline-none transition-colors",
-                item.isSelected() ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50",
+                "relative flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-sm outline-none transition-colors",
+                item.isSelected()
+                    ? "bg-accent text-accent-foreground"
+                    : "text-foreground hover:bg-accent/50",
                 item.isFocused() && "ring-1 ring-inset ring-ring",
-                item.isDragTarget() && "bg-accent outline outline-2 outline-ring",
+                item.isDragTarget() &&
+                    "bg-accent outline outline-2 outline-ring",
             )}
         >
-            <RowIcon isFolder={isFolder} isExpanded={item.isExpanded()} />
+            <TreeGuides level={level} />
+            {isFolder ? (
+                <ChevronRightIcon
+                    className={cn(
+                        "h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-150",
+                        isExpanded && "rotate-90",
+                    )}
+                />
+            ) : (
+                <span className="w-3.5 shrink-0" />
+            )}
+            <RowIcon isFolder={isFolder} isExpanded={isExpanded} />
             <span className="truncate">{item.getItemName()}</span>
         </button>
     )
 }
 
-function RowIcon({ isFolder, isExpanded }: { isFolder: boolean; isExpanded: boolean }) {
+function TreeGuides({ level }: { level: number }) {
+    if (level === 0) return null
+    return (
+        <>
+            {Array.from({ length: level }).map((_, i) => (
+                <span
+                    key={i}
+                    aria-hidden
+                    className="absolute inset-y-0 w-px bg-border"
+                    style={{ left: `${i * 18 + 16}px` }}
+                />
+            ))}
+        </>
+    )
+}
+
+function RowIcon({
+    isFolder,
+    isExpanded,
+}: {
+    isFolder: boolean
+    isExpanded: boolean
+}) {
     if (!isFolder) {
         return <FileIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
     }

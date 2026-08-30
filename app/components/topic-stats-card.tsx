@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useMemo, useState } from "react"
 import type { PerformanceRecord } from "@/lib/core/types"
 import {
     ChartContainer,
@@ -8,7 +8,15 @@ import {
     ChartTooltipContent,
     type ChartConfig,
 } from "@/components/ui/chart"
-import { Bar, BarChart, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import {
+    ChevronDownIcon,
+    MinusIcon,
+    TrendingDownIcon,
+    TrendingUpIcon,
+} from "lucide-react"
+
+import { cn } from "@/lib/utils"
 
 interface TopicStatsCardProps {
     history: PerformanceRecord[]
@@ -44,12 +52,10 @@ export function TopicStatsCard({ history }: TopicStatsCardProps) {
         const cutoff = new Date(now)
         cutoff.setDate(cutoff.getDate() - period)
 
-        const filtered = history.filter(
-            (r) => new Date(r.date) >= cutoff,
-        )
+        const filtered = history.filter((r) => new Date(r.date) >= cutoff)
 
-        const sorted = [...filtered].sort(
-            (a, b) => a.date.localeCompare(b.date),
+        const sorted = [...filtered].sort((a, b) =>
+            a.date.localeCompare(b.date),
         )
 
         return sorted.map((r) => ({
@@ -59,25 +65,60 @@ export function TopicStatsCard({ history }: TopicStatsCardProps) {
         }))
     }, [history, period])
 
+    const periodSummary = useMemo(() => {
+        const totals = chartData.reduce(
+            (acc, d) => ({
+                hits: acc.hits + d.hits,
+                attempts: acc.attempts + d.hits + d.misses,
+            }),
+            { hits: 0, attempts: 0 },
+        )
+        return {
+            attempts: totals.attempts,
+            accuracy:
+                totals.attempts === 0 ? null : totals.hits / totals.attempts,
+        }
+    }, [chartData])
+
     if (history.length === 0) {
         return null
     }
 
     return (
-        <div className="rounded-md border p-4 space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold">Statistics</h3>
-                <select
-                    value={period}
-                    onChange={(e) => setPeriod(Number(e.target.value))}
-                    className="rounded border bg-background px-2 py-1 text-xs"
-                >
-                    {PERIOD_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                        </option>
-                    ))}
-                </select>
+        <div className="space-y-5 rounded-lg border bg-card p-4">
+            <div className="flex items-start justify-between gap-3">
+                <div>
+                    <h3 className="text-sm font-semibold text-foreground">
+                        Statistics
+                    </h3>
+                    <p className="mt-1 flex items-baseline gap-1.5">
+                        <span className="text-2xl font-semibold tabular-nums text-foreground">
+                            {periodSummary.accuracy === null
+                                ? "—"
+                                : `${(periodSummary.accuracy * 100).toFixed(0)}%`}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                            accuracy · last {period} days
+                            {periodSummary.attempts > 0 &&
+                                ` (${periodSummary.attempts} attempts)`}
+                        </span>
+                    </p>
+                </div>
+
+                <div className="relative shrink-0">
+                    <select
+                        value={period}
+                        onChange={(e) => setPeriod(Number(e.target.value))}
+                        className="appearance-none rounded-md border bg-background py-1 pl-2 pr-6 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                        {PERIOD_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </option>
+                        ))}
+                    </select>
+                    <ChevronDownIcon className="pointer-events-none absolute right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+                </div>
             </div>
 
             {recentSessions.length > 0 && (
@@ -92,58 +133,57 @@ export function TopicStatsCard({ history }: TopicStatsCardProps) {
                                     ? 0
                                     : session.hits / session.total
                             const prevSession = history.find(
-                                (r) =>
-                                    r.date <
-                                    session.date,
+                                (r) => r.date < session.date,
                             )
                             const growth = prevSession
                                 ? score -
                                   (prevSession.total === 0
                                       ? 0
-                                      : prevSession.hits /
-                                        prevSession.total)
+                                      : prevSession.hits / prevSession.total)
                                 : null
 
                             return (
                                 <div
                                     key={session.date}
-                                    className="rounded border p-2 text-center"
+                                    className="rounded-lg border p-2 text-center"
                                 >
                                     <p className="text-[10px] text-muted-foreground">
                                         {new Date(
                                             session.date,
-                                        ).toLocaleDateString(
-                                            "en-US",
-                                            {
-                                                month: "short",
-                                                day: "numeric",
-                                            },
-                                        )}
+                                        ).toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                        })}
                                     </p>
-                                    <p className="text-lg font-bold">
+                                    <p className="text-lg font-semibold tabular-nums text-foreground">
                                         {(score * 100).toFixed(0)}%
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
-                                        {session.hits}/
-                                        {session.total}
+                                        {session.hits}/{session.total}
                                     </p>
                                     {growth !== null && (
                                         <p
-                                            className={`text-[10px] ${
-                                                growth > 0
-                                                    ? "text-green-600"
-                                                    : growth < 0
-                                                      ? "text-red-600"
-                                                      : "text-muted-foreground"
-                                            }`}
+                                            className={cn(
+                                                "mt-0.5 flex items-center justify-center gap-0.5 text-[10px]",
+                                                growth > 0 &&
+                                                    "text-emerald-600 dark:text-emerald-400",
+                                                growth < 0 &&
+                                                    "text-red-600 dark:text-red-400",
+                                                growth === 0 &&
+                                                    "text-muted-foreground",
+                                            )}
                                         >
-                                            {growth > 0
-                                                ? "+"
-                                                : ""}
-                                            {(
-                                                growth * 100
-                                            ).toFixed(0)}
-                                            %
+                                            {growth > 0 && (
+                                                <TrendingUpIcon className="h-2.5 w-2.5" />
+                                            )}
+                                            {growth < 0 && (
+                                                <TrendingDownIcon className="h-2.5 w-2.5" />
+                                            )}
+                                            {growth === 0 && (
+                                                <MinusIcon className="h-2.5 w-2.5" />
+                                            )}
+                                            {growth !== 0 &&
+                                                `${growth > 0 ? "+" : ""}${(growth * 100).toFixed(0)}%`}
                                         </p>
                                     )}
                                 </div>
@@ -155,9 +195,31 @@ export function TopicStatsCard({ history }: TopicStatsCardProps) {
 
             {chartData.length > 0 && (
                 <div>
-                    <p className="mb-2 text-xs font-medium text-muted-foreground">
-                        Performance Over Time
-                    </p>
+                    <div className="mb-2 flex items-center justify-between">
+                        <p className="text-xs font-medium text-muted-foreground">
+                            Performance Over Time
+                        </p>
+                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                            <span className="flex items-center gap-1">
+                                <span
+                                    className="h-2 w-2 rounded-full"
+                                    style={{
+                                        backgroundColor: "var(--chart-1)",
+                                    }}
+                                />
+                                Hits
+                            </span>
+                            <span className="flex items-center gap-1">
+                                <span
+                                    className="h-2 w-2 rounded-full"
+                                    style={{
+                                        backgroundColor: "var(--chart-2)",
+                                    }}
+                                />
+                                Misses
+                            </span>
+                        </div>
+                    </div>
                     <ChartContainer
                         config={chartConfig}
                         className="h-48 w-full"
@@ -170,7 +232,13 @@ export function TopicStatsCard({ history }: TopicStatsCardProps) {
                                 left: -20,
                                 bottom: 0,
                             }}
+                            barGap={2}
                         >
+                            <CartesianGrid
+                                vertical={false}
+                                strokeDasharray="3 3"
+                                stroke="var(--border)"
+                            />
                             <XAxis
                                 dataKey="date"
                                 tickFormatter={(value) =>
@@ -183,15 +251,21 @@ export function TopicStatsCard({ history }: TopicStatsCardProps) {
                                     )
                                 }
                                 tick={{ fontSize: 10 }}
+                                tickLine={false}
+                                axisLine={false}
                             />
-                            <YAxis tick={{ fontSize: 10 }} />
+                            <YAxis
+                                tick={{ fontSize: 10 }}
+                                tickLine={false}
+                                axisLine={false}
+                                width={28}
+                            />
                             <ChartTooltip
+                                cursor={{ fill: "var(--muted)" }}
                                 content={
                                     <ChartTooltipContent
                                         labelFormatter={(label) =>
-                                            new Date(
-                                                label,
-                                            ).toLocaleDateString(
+                                            new Date(label).toLocaleDateString(
                                                 "en-US",
                                                 {
                                                     weekday: "short",
@@ -206,12 +280,12 @@ export function TopicStatsCard({ history }: TopicStatsCardProps) {
                             <Bar
                                 dataKey="hits"
                                 fill="var(--color-hits)"
-                                radius={[2, 2, 0, 0]}
+                                radius={[3, 3, 0, 0]}
                             />
                             <Bar
                                 dataKey="misses"
                                 fill="var(--color-misses)"
-                                radius={[2, 2, 0, 0]}
+                                radius={[3, 3, 0, 0]}
                             />
                         </BarChart>
                     </ChartContainer>

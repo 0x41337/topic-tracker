@@ -24,14 +24,21 @@ import { SettingsIcon, ChartAreaIcon, FolderTreeIcon } from "lucide-react"
 export function AppSidebar() {
     const sidebar = useSidebar()
 
-    const isExpanded = sidebar.state == "expanded"
+    // On mobile the sidebar always renders full-width as a sheet, regardless
+    // of the desktop expanded/collapsed preference — so show the full header
+    // (logo + trigger) whenever we're on mobile, not just when "expanded".
+    const showExpandedHeader = sidebar.isMobile || sidebar.state === "expanded"
+
+    // Tapping a nav item should close the mobile sheet; harmless on desktop
+    // since openMobile has no effect on the persistent sidebar there.
+    const closeOnMobile = () => sidebar.setOpenMobile(false)
 
     return (
         <Sidebar collapsible="icon">
             <SidebarHeader>
                 <div className="relative h-10">
                     <AnimatePresence mode="wait" initial={false}>
-                        {isExpanded ? (
+                        {showExpandedHeader ? (
                             <motion.div
                                 key="expanded"
                                 className="absolute inset-0 flex flex-row items-center justify-between"
@@ -62,13 +69,17 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <SidebarMenu>
                         <SidebarMenuItem>
-                            <SidebarMenuButton render={<Link href="/" />}>
+                            <SidebarMenuButton
+                                onClick={closeOnMobile}
+                                render={<Link href="/" />}
+                            >
                                 <FolderTreeIcon />
                                 Topics
                             </SidebarMenuButton>
                         </SidebarMenuItem>
                         <SidebarMenuItem>
                             <SidebarMenuButton
+                                onClick={closeOnMobile}
                                 render={<Link href="/statistics" />}
                             >
                                 <ChartAreaIcon />
@@ -81,7 +92,10 @@ export function AppSidebar() {
             <SidebarFooter>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton render={<Link href="/settings" />}>
+                        <SidebarMenuButton
+                            onClick={closeOnMobile}
+                            render={<Link href="/settings" />}
+                        >
                             <SettingsIcon />
                             Settings
                         </SidebarMenuButton>

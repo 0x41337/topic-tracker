@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion"
 import {
     FilePlus2Icon,
     FolderPlusIcon,
+    MousePointerClickIcon,
     PencilIcon,
     Trash2Icon,
     XIcon,
@@ -47,71 +48,32 @@ export default function Home() {
 
     if (status === "loading") {
         return (
-            <div className="flex min-h-screen w-full flex-col gap-5 p-4">
-                <div className="w-full rounded-md border p-1.5">
-                    <div
-                        className="flex h-112 w-full items-center justify-center"
-                        role="status"
-                        aria-label="Loading"
-                    >
-                        <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground" />
-                    </div>
-                </div>
+            <div
+                role="status"
+                aria-label="Loading"
+                className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col gap-5 p-4 lg:flex-row lg:gap-6 lg:p-6"
+            >
+                <aside className="flex flex-col gap-3 lg:w-[360px] lg:shrink-0">
+                    <div className="h-9 w-28 animate-pulse rounded-md bg-muted" />
+                    <div className="h-112 w-full animate-pulse rounded-lg bg-muted" />
+                </aside>
+                <main className="flex-1">
+                    <div className="h-112 w-full animate-pulse rounded-lg bg-muted" />
+                </main>
             </div>
         )
     }
 
     return (
-        <div className="flex flex-col w-full">
-            <div className="flex min-h-screen w-full flex-col gap-5 p-4">
-                <AnimatePresence mode="wait">
-                    {focusedItem && (
-                        <motion.div
-                            key={focusedItem.id}
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            transition={{ duration: 0.15 }}
-                            className="flex flex-col gap-5"
-                        >
-                            <TopicMetadataCard item={focusedItem} />
-
-                            {focusedItem.type === "topic" && (
-                                <>
-                                    <TopicStatsCard history={history} />
-
-                                    <TopicSessionCard
-                                        score={score}
-                                        onHit={recordHit}
-                                        onMiss={recordMiss}
-                                        onUndo={undoLastAction}
-                                    />
-                                </>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {!focusedItem && (
-                        <motion.div
-                            key="empty"
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            transition={{ duration: 0.15 }}
-                            className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground"
-                        >
-                            Click an item in the tree to see its details here.
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                <div className="w-full rounded-md border p-1.5">
+        <div className="mx-auto flex min-h-screen w-full max-w-[1400px] flex-col gap-5 p-4 lg:flex-row lg:items-start lg:gap-6 lg:p-6">
+            <aside className="flex flex-col gap-2 lg:sticky lg:top-6 lg:w-[360px] lg:shrink-0">
+                <div className="rounded-lg border bg-card">
                     <div className="flex flex-col gap-2 border-b px-3 py-2.5">
                         <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <span className="text-sm font-medium text-foreground">
                                 Explorer
                             </span>
-                            <div className="flex items-center gap-1">
+                            <div className="flex items-center gap-0.5">
                                 <Button
                                     variant="ghost"
                                     size="icon-xs"
@@ -155,6 +117,7 @@ export default function Home() {
                                         variant="ghost"
                                         size="xs"
                                         onClick={deleteItems}
+                                        className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                                     >
                                         <Trash2Icon />
                                         Delete
@@ -176,13 +139,58 @@ export default function Home() {
                         <SearchBar value={search} onChange={setSearch} />
                     </div>
 
-                    <ScrollArea className="h-112 w-full">
-                        <div className="px-2 py-2">
+                    <ScrollArea className="h-112 w-full lg:h-[calc(100vh-13rem)]">
+                        <div className="px-2 pb-2">
                             <TreeView tree={tree} items={items} />
                         </div>
                     </ScrollArea>
                 </div>
-            </div>
+            </aside>
+
+            <main className="min-w-0 flex-1">
+                <AnimatePresence mode="wait">
+                    {focusedItem ? (
+                        <motion.div
+                            key={focusedItem.id}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex flex-col gap-5"
+                        >
+                            <TopicMetadataCard item={focusedItem} />
+
+                            {focusedItem.type === "topic" && (
+                                <>
+                                    <TopicStatsCard history={history} />
+
+                                    <TopicSessionCard
+                                        score={score}
+                                        onHit={recordHit}
+                                        onMiss={recordMiss}
+                                        onUndo={undoLastAction}
+                                    />
+                                </>
+                            )}
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="empty"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="flex h-full min-h-112 flex-col items-center justify-center gap-2 rounded-lg border border-dashed text-center text-muted-foreground"
+                        >
+                            <MousePointerClickIcon className="h-5 w-5" />
+                            <p className="text-sm">
+                                Select a folder or topic to see its details
+                                here.
+                            </p>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </main>
         </div>
     )
 }
