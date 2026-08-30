@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import type { TopicNode } from "../core/types"
-import type { TreeDataMap } from "../core/tree-types"
+import type { TreeDataMap, TreeNodeData } from "../core/tree-types"
 import { ROOT_ID } from "../core/tree-types"
 import { DexieTopicRepository } from "../infra/topic-repository"
 
@@ -25,6 +25,37 @@ function nodesToTreeDataMap(nodes: TopicNode[]): TreeDataMap {
     return map
 }
 
+function buildRootNode(childrenIds: string[]): TreeNodeData {
+    return {
+        id: ROOT_ID,
+        name: "Topics",
+        type: "folder",
+        children: childrenIds,
+    }
+}
+
+function treeDataMapToNodes(data: TreeDataMap): TopicNode[] {
+    const nodes: TopicNode[] = []
+
+    for (const [id, node] of Object.entries(data)) {
+        if (id === ROOT_ID) continue
+
+        const parentId =
+            Object.values(data).find(
+                (n) => n.type === "folder" && n.children?.includes(id),
+            )?.id ?? null
+
+        nodes.push({
+            id: node.id,
+            name: node.name,
+            parentId: parentId === ROOT_ID ? null : parentId,
+            isFolder: node.type === "folder",
+        })
+    }
+
+    return nodes
+}
+
 export type TreeStatus = "loading" | "empty" | "content"
 
 export function useTreeData() {
@@ -32,20 +63,18 @@ export function useTreeData() {
     const [status, setStatus] = useState<TreeStatus>("loading")
     const mountedRef = useRef(true)
 
+    const loadRef = useRef(0)
+
     const reload = useCallback(async () => {
+        const thisLoad = ++loadRef.current
         if (!mountedRef.current) return
         setStatus("loading")
         const nodes = await repo.getAll()
-        if (!mountedRef.current) return
+        if (!mountedRef.current || thisLoad !== loadRef.current) return
         const map = nodesToTreeDataMap(nodes)
-        map[ROOT_ID] = {
-            id: ROOT_ID,
-            name: "Topics",
-            type: "folder",
-            children: nodes
-                .filter((n) => n.parentId === null)
-                .map((n) => n.id),
-        }
+        map[ROOT_ID] = buildRootNode(
+            nodes.filter((n) => n.parentId === null).map((n) => n.id),
+        )
         setData(map)
         setStatus(nodes.length === 0 ? "empty" : "content")
     }, [])
@@ -58,39 +87,34 @@ export function useTreeData() {
         }
     }, [reload])
 
-    const syncToDexie = useCallback(
-        async (newData: TreeDataMap) => {
-            const nodes = Object.values(newData).filter((n) => n.id !== ROOT_ID)
-            const existing = await repo.getAll()
-            const existingMap = new Map(existing.map((n) => [n.id, n]))
+    const syncQueueRef = useRef<Promise<void>>(Promise.resolve())
 
-            for (const node of nodes) {
-                const ex = existingMap.get(node.id)
-                if (!ex) {
-                    await repo.create({
-                        name: node.name,
-                        parentId:
-                            Object.values(newData).find(
-                                (n) => n.type === "folder" && n.children?.includes(node.id),
-                            )?.id ?? null,
-                        isFolder: node.type === "folder",
-                    })
-                } else {
-                    const newParentId =
-                        Object.values(newData).find(
-                            (n) => n.type === "folder" && n.children?.includes(node.id),
-                        )?.id ?? null
-                    if (ex.name !== node.name || ex.parentId !== newParentId) {
-                        await repo.update(node.id, { name: node.name, parentId: newParentId })
+    const enqueueSync = useCallback(
+        (newData: TreeDataMap) => {
+            syncQueueRef.current = syncQueueRef.current.then(async () => {
+                try {
+                    const nodes = treeDataMapToNodes(newData)
+                    const nodeIds = new Set(nodes.map((n) => n.id))
+                    const existing = await repo.getAll()
+
+                    const toDelete: string[] = []
+                    for (const ex of existing) {
+                        if (!nodeIds.has(ex.id)) {
+                            toDelete.push(ex.id)
+                        }
                     }
-                }
-            }
 
-            for (const node of existing) {
-                if (!newData[node.id]) {
-                    await repo.delete(node.id)
+                    if (toDelete.length > 0) {
+                        await repo.deleteMany(toDelete)
+                    }
+
+                    if (nodes.length > 0) {
+                        await repo.putAll(nodes)
+                    }
+                } catch (err) {
+                    console.error("[useTreeData] sync failed:", err)
                 }
-            }
+            })
         },
         [],
     )
@@ -99,11 +123,11 @@ export function useTreeData() {
         (updater: (prev: TreeDataMap) => TreeDataMap) => {
             setData((prev) => {
                 const next = updater(prev)
-                void syncToDexie(next)
+                enqueueSync(next)
                 return next
             })
         },
-        [syncToDexie],
+        [enqueueSync],
     )
 
     return useMemo(
