@@ -26,14 +26,6 @@ import {
 import { cn } from "@/lib/utils"
 import { collectDescendantIds, createNodeId, getUniqueName } from "@/lib/core/tree-data"
 import { ROOT_ID, type TreeDataMap, type TreeItemType, type TreeNodeData } from "@/lib/core/tree-types"
-import {
-    ContextMenu,
-    ContextMenuContent,
-    ContextMenuItem,
-    ContextMenuSeparator,
-    ContextMenuShortcut,
-    ContextMenuTrigger,
-} from "@/components/ui/context-menu"
 import { SearchBar } from "@/app/components/search-bar"
 
 interface TreeExplorerProps {
@@ -228,26 +220,28 @@ export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeEx
         if (focused) deleteItems([focused])
     }, [deleteItems, tree])
 
-    const getEffectiveDeleteTargets = useCallback(
-        (itemId: string): string[] => {
-            const selected = tree.getState().selectedItems ?? []
-            if (selected.includes(itemId) && selected.length > 1) return selected
-            return [itemId]
-        },
-        [tree],
-    )
+    const startRenameSelected = useCallback(() => {
+        const selected = tree.getState().selectedItems ?? []
+        if (selected.length === 1) {
+            tree.getItemInstance(selected[0])?.startRenaming()
+        }
+    }, [tree])
 
     const items = tree.getItems()
-    const selectedCount = tree.getState().selectedItems?.length ?? 0
+    const selectedItems = tree.getState().selectedItems ?? []
+    const selectedCount = selectedItems.length
+    const canRename = selectedCount === 1 && selectedItems[0] !== ROOT_ID
 
     return (
         <div className="flex h-full flex-col">
             <Toolbar
                 selectedCount={selectedCount}
+                canRename={canRename}
                 onNewFolder={() => createItem("folder")}
                 onNewTopic={() => createItem("topic")}
+                onRename={startRenameSelected}
                 onClearSelection={() => tree.setSelectedItems([])}
-                onDeleteSelected={() => deleteItems(tree.getState().selectedItems ?? [])}
+                onDeleteSelected={() => deleteItems(selectedItems)}
             />
 
             <div className="px-2 py-2">
@@ -258,23 +252,12 @@ export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeEx
                 <div {...tree.getContainerProps()} className="tree relative outline-none">
                     <AssistiveTreeDescription tree={tree} />
                     {items.map((item) => (
-                        <TreeRow
-                            key={item.getId()}
-                            item={item}
-                            onCreateFolder={(parentId) => createItem("folder", parentId)}
-                            onCreateTopic={(parentId) => createItem("topic", parentId)}
-                            onDelete={(id) => deleteItems(getEffectiveDeleteTargets(id))}
-                            deleteCount={(id) => getEffectiveDeleteTargets(id).length}
-                        />
+                        <TreeRow key={item.getId()} item={item} />
                     ))}
                     <div style={tree.getDragLineStyle()} className="absolute z-10 h-0.5 rounded-full bg-primary" />
                 </div>
 
-                <EmptyAreaContextMenu
-                    onCreateFolder={() => createItem("folder", ROOT_ID)}
-                    onCreateTopic={() => createItem("topic", ROOT_ID)}
-                    onClearSelection={() => tree.setSelectedItems([])}
-                />
+                <div className="min-h-16 w-full flex-1" onClick={() => tree.setSelectedItems([])} />
             </div>
         </div>
     )
@@ -282,14 +265,18 @@ export function TreeExplorer({ data, onDataChange, onFocusedItemChange }: TreeEx
 
 function Toolbar({
     selectedCount,
+    canRename,
     onNewFolder,
     onNewTopic,
+    onRename,
     onClearSelection,
     onDeleteSelected,
 }: {
     selectedCount: number
+    canRename: boolean
     onNewFolder: () => void
     onNewTopic: () => void
+    onRename: () => void
     onClearSelection: () => void
     onDeleteSelected: () => void
 }) {
@@ -323,6 +310,17 @@ function Toolbar({
                         {selectedCount} {selectedCount === 1 ? "item selected" : "items selected"}
                     </span>
                     <div className="flex items-center gap-1">
+                        {canRename && (
+                            <button
+                                type="button"
+                                onClick={onRename}
+                                className="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-accent-foreground hover:bg-accent/80"
+                                title="Rename (F2)"
+                            >
+                                <PencilIcon className="h-3.5 w-3.5" />
+                                Rename
+                            </button>
+                        )}
                         <button
                             type="button"
                             onClick={onDeleteSelected}
@@ -346,25 +344,9 @@ function Toolbar({
     )
 }
 
-function TreeRow({
-    item,
-    onCreateFolder,
-    onCreateTopic,
-    onDelete,
-    deleteCount,
-}: {
-    item: ItemInstance<TreeNodeData>
-    onCreateFolder: (parentId: string) => void
-    onCreateTopic: (parentId: string) => void
-    onDelete: (id: string) => void
-    deleteCount: (id: string) => number
-}) {
+function TreeRow({ item }: { item: ItemInstance<TreeNodeData> }) {
     const isFolder = item.isFolder()
     const level = item.getItemMeta().level
-    const id = item.getId()
-    const count = deleteCount(id)
-
-    const containerFolderId = isFolder ? id : item.getParent()?.getId() ?? ROOT_ID
 
     if (item.isRenaming()) {
         const inputProps = item.getRenameInputProps()
@@ -388,44 +370,19 @@ function TreeRow({
     }
 
     return (
-        <ContextMenu>
-            <ContextMenuTrigger>
-                <button
-                    {...item.getProps()}
-                    style={{ paddingLeft: `${level * 18 + 8}px` }}
-                    className={cn(
-                        "flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-sm outline-none transition-colors",
-                        item.isSelected() ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50",
-                        item.isFocused() && "ring-1 ring-inset ring-ring",
-                        item.isDragTarget() && "bg-accent outline outline-2 outline-ring",
-                    )}
-                >
-                    <RowIcon isFolder={isFolder} isExpanded={item.isExpanded()} />
-                    <span className="truncate">{item.getItemName()}</span>
-                </button>
-            </ContextMenuTrigger>
-            <ContextMenuContent className="w-56">
-                <ContextMenuItem onSelect={() => onCreateTopic(containerFolderId)}>
-                    <FilePlus2Icon className="h-4 w-4 text-muted-foreground" />
-                    New Topic
-                </ContextMenuItem>
-                <ContextMenuItem onSelect={() => onCreateFolder(containerFolderId)}>
-                    <FolderPlusIcon className="h-4 w-4 text-muted-foreground" />
-                    New Folder
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-                <ContextMenuItem onSelect={() => item.startRenaming()}>
-                    <PencilIcon className="h-4 w-4 text-muted-foreground" />
-                    Rename
-                    <ContextMenuShortcut>F2</ContextMenuShortcut>
-                </ContextMenuItem>
-                <ContextMenuItem variant="destructive" onSelect={() => onDelete(id)}>
-                    <Trash2Icon className="h-4 w-4" />
-                    {count > 1 ? `Delete ${count} items` : "Delete"}
-                    <ContextMenuShortcut>Del</ContextMenuShortcut>
-                </ContextMenuItem>
-            </ContextMenuContent>
-        </ContextMenu>
+        <button
+            {...item.getProps()}
+            style={{ paddingLeft: `${level * 18 + 8}px` }}
+            className={cn(
+                "flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-sm outline-none transition-colors",
+                item.isSelected() ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-accent/50",
+                item.isFocused() && "ring-1 ring-inset ring-ring",
+                item.isDragTarget() && "bg-accent outline outline-2 outline-ring",
+            )}
+        >
+            <RowIcon isFolder={isFolder} isExpanded={item.isExpanded()} />
+            <span className="truncate">{item.getItemName()}</span>
+        </button>
     )
 }
 
@@ -437,33 +394,5 @@ function RowIcon({ isFolder, isExpanded }: { isFolder: boolean; isExpanded: bool
         <FolderOpenIcon className="h-4 w-4 shrink-0 text-primary" />
     ) : (
         <FolderIcon className="h-4 w-4 shrink-0 text-primary" />
-    )
-}
-
-function EmptyAreaContextMenu({
-    onCreateFolder,
-    onCreateTopic,
-    onClearSelection,
-}: {
-    onCreateFolder: () => void
-    onCreateTopic: () => void
-    onClearSelection: () => void
-}) {
-    return (
-        <ContextMenu>
-            <ContextMenuTrigger>
-                <div className="min-h-16 w-full flex-1" onClick={onClearSelection} />
-            </ContextMenuTrigger>
-            <ContextMenuContent className="w-56">
-                <ContextMenuItem onSelect={onCreateTopic}>
-                    <FilePlus2Icon className="h-4 w-4 text-muted-foreground" />
-                    New Topic
-                </ContextMenuItem>
-                <ContextMenuItem onSelect={onCreateFolder}>
-                    <FolderPlusIcon className="h-4 w-4 text-muted-foreground" />
-                    New Folder
-                </ContextMenuItem>
-            </ContextMenuContent>
-        </ContextMenu>
     )
 }
