@@ -47,6 +47,66 @@ export default function Home() {
 
     return (
         <div className="flex min-h-screen w-full flex-col gap-5 p-4">
+            {focusedItem && (
+                <div className="rounded-md border p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {focusedItem.type === "folder" ? "Folder" : "Topic"}
+                    </p>
+                    <h2 className="mt-1 text-2xl font-semibold">{focusedItem.name}</h2>
+
+                    {focusedItem.type === "topic" && (
+                        <div className="mt-4 space-y-3">
+                            <div className="text-sm text-muted-foreground">
+                                Today&apos;s performance:
+                            </div>
+
+                            {score.total === 0 ? (
+                                <p className="text-sm">No data recorded yet.</p>
+                            ) : (
+                                <div className="space-y-1">
+                                    <p className="text-sm">
+                                        Hits: <span className="font-medium">{score.hits}</span> / {score.total}
+                                    </p>
+                                    <p className="text-sm">
+                                        Score:{" "}
+                                        <span className="font-medium">
+                                            {(score.value * 100).toFixed(1)}%
+                                        </span>
+                                    </p>
+                                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                                        <div
+                                            className="h-full bg-primary transition-all"
+                                            style={{ width: `${score.value * 100}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex gap-2">
+                                <Button onClick={recordHit}>
+                                    Hit
+                                </Button>
+                                <Button variant="outline" onClick={recordMiss}>
+                                    Miss
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {focusedItem.type === "folder" && (
+                        <p className="mt-3 text-sm text-muted-foreground">
+                            Click to expand or collapse this folder in the tree.
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {!focusedItem && (
+                <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    Click an item in the tree to see its details here.
+                </div>
+            )}
+
             <div className="w-full rounded-md border p-1.5">
                 <div className="flex flex-col gap-2 border-b px-3 py-2.5">
                     <div className="flex items-center justify-between gap-2">
@@ -119,66 +179,6 @@ export default function Home() {
                     </div>
                 </ScrollArea>
             </div>
-
-            {focusedItem && (
-                <div className="rounded-md border p-4">
-                    <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {focusedItem.type === "folder" ? "Folder" : "Topic"}
-                    </p>
-                    <h2 className="mt-1 text-2xl font-semibold">{focusedItem.name}</h2>
-
-                    {focusedItem.type === "topic" && (
-                        <div className="mt-4 space-y-3">
-                            <div className="text-sm text-muted-foreground">
-                                Today&apos;s performance:
-                            </div>
-
-                            {score.total === 0 ? (
-                                <p className="text-sm">No data recorded yet.</p>
-                            ) : (
-                                <div className="space-y-1">
-                                    <p className="text-sm">
-                                        Hits: <span className="font-medium">{score.hits}</span> / {score.total}
-                                    </p>
-                                    <p className="text-sm">
-                                        Score:{" "}
-                                        <span className="font-medium">
-                                            {(score.value * 100).toFixed(1)}%
-                                        </span>
-                                    </p>
-                                    <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
-                                        <div
-                                            className="h-full bg-primary transition-all"
-                                            style={{ width: `${score.value * 100}%` }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex gap-2">
-                                <Button onClick={recordHit}>
-                                    Hit
-                                </Button>
-                                <Button variant="outline" onClick={recordMiss}>
-                                    Miss
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-
-                    {focusedItem.type === "folder" && (
-                        <p className="mt-3 text-sm text-muted-foreground">
-                            Click to expand or collapse this folder in the tree.
-                        </p>
-                    )}
-                </div>
-            )}
-
-            {!focusedItem && (
-                <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
-                    Click an item in the tree to see its details here.
-                </div>
-            )}
         </div>
     )
 }
