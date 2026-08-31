@@ -43,6 +43,7 @@ export function ActivityHeatmap({ dailyPoints }: ActivityHeatmapProps) {
                 className="w-full"
                 blockMargin={3}
                 blockRadius={2}
+                colors={{ scale: "var(--primary)", empty: "var(--muted)" }}
             >
                 <CalendarHeatmapBody>
                     {({ activity, dayIndex, weekIndex }) => (
