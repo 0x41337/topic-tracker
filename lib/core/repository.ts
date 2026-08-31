@@ -20,6 +20,4 @@ export interface PerformanceRepository {
     recordMiss(topicId: string, date: string): Promise<void>
     undoLastAction(topicId: string, date: string): Promise<boolean>
     getHistory(topicId: string): Promise<PerformanceRecord[]>
-    exportCSV(): Promise<string>
-    importCSV(csv: string): Promise<void>
 }

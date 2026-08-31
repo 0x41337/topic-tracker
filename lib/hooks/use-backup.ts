@@ -17,18 +17,15 @@ interface BackupData {
 }
 
 export function useBackup() {
-    const [exportJsonState, setExportJsonState] = useState<BackupState>({
+    const [exportState, setExportState] = useState<BackupState>({
         status: "idle",
     })
-    const [importJsonState, setImportJsonState] = useState<BackupState>({
-        status: "idle",
-    })
-    const [exportCsvState, setExportCsvState] = useState<BackupState>({
+    const [importState, setImportState] = useState<BackupState>({
         status: "idle",
     })
 
-    const exportJsonBackup = useCallback(async () => {
-        setExportJsonState({ status: "working" })
+    const exportBackup = useCallback(async () => {
+        setExportState({ status: "working" })
         try {
             const topics = await db.topics.toArray()
             const performances = await db.performances.toArray()
@@ -48,18 +45,18 @@ export function useBackup() {
             link.click()
             document.body.removeChild(link)
             URL.revokeObjectURL(url)
-            setExportJsonState({ status: "success", message: "Backup exported." })
+            setExportState({ status: "success", message: "Backup exported." })
         } catch (err) {
-            console.error("[useBackup] JSON export failed:", err)
-            setExportJsonState({
+            console.error("[useBackup] export failed:", err)
+            setExportState({
                 status: "error",
                 message: "Couldn't export backup. Please try again.",
             })
         }
     }, [])
 
-    const importJsonBackup = useCallback(async (file: File) => {
-        setImportJsonState({ status: "working" })
+    const importBackup = useCallback(async (file: File) => {
+        setImportState({ status: "working" })
         try {
             const text = await file.text()
             const data = JSON.parse(text) as BackupData
@@ -79,79 +76,29 @@ export function useBackup() {
                 }
             })
 
-            setImportJsonState({
+            setImportState({
                 status: "success",
                 message: `Imported ${data.topics.length} topics and ${data.performances.length} sessions from "${file.name}".`,
             })
         } catch (err) {
-            console.error("[useBackup] JSON import failed:", err)
-            setImportJsonState({
+            console.error("[useBackup] import failed:", err)
+            setImportState({
                 status: "error",
                 message: "Couldn't import that file. Make sure it's a valid Topic Tracker backup.",
             })
         }
     }, [])
 
-    const exportCsvBackup = useCallback(async () => {
-        setExportCsvState({ status: "working" })
-        try {
-            const [records, topics] = await Promise.all([
-                db.performances.toArray(),
-                db.topics.toArray(),
-            ])
-            const topicMap = new Map(topics.map((t) => [t.id, t.name]))
-
-            const aggregated = new Map<string, { topic: string; hits: number; total: number; date: string }>()
-            for (const r of records) {
-                const name = topicMap.get(r.topicId)
-                if (!name || r.total === 0) continue
-                const key = `${name}|${r.date}`
-                const existing = aggregated.get(key)
-                if (existing) {
-                    existing.hits += r.hits
-                    existing.total += r.total
-                } else {
-                    aggregated.set(key, { topic: name, hits: r.hits, total: r.total, date: r.date })
-                }
-            }
-
-            const header = "topic|hits|total|date"
-            const rows = [...aggregated.values()]
-                .sort((a, b) => a.date.localeCompare(b.date) || a.topic.localeCompare(b.topic))
-                .map((r) => `${r.topic}|${r.hits}|${r.total}|${r.date}`)
-            const csv = [header, ...rows].join("\n")
-            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-            const url = URL.createObjectURL(blob)
-            const link = document.createElement("a")
-            const today = new Date().toISOString().slice(0, 10)
-            link.href = url
-            link.download = `topictracker-sessions-${today}.csv`
-            document.body.appendChild(link)
-            link.click()
-            document.body.removeChild(link)
-            URL.revokeObjectURL(url)
-            setExportCsvState({ status: "success", message: "CSV exported." })
-        } catch (err) {
-            console.error("[useBackup] CSV export failed:", err)
-            setExportCsvState({
-                status: "error",
-                message: "Couldn't export CSV. Please try again.",
-            })
-        }
-    }, [])
-
-    const resetImportJsonState = useCallback(
-        () => setImportJsonState({ status: "idle" }),
+    const resetImportState = useCallback(
+        () => setImportState({ status: "idle" }),
         [],
     )
 
     return {
-        exportJsonState,
-        importJsonState,
-        exportCsvState,
-        exportJsonBackup,
-        importJsonBackup,
-        exportCsvBackup,
-        resetImportJsonState,
+        exportState,
+        importState,
+        exportBackup,
+        importBackup,
+        resetImportState,
     }
 }

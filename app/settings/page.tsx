@@ -5,7 +5,6 @@ import { useTheme } from "next-themes"
 import {
     CheckCircle2Icon,
     DownloadIcon,
-    FileDownIcon,
     MonitorIcon,
     MoonIcon,
     SunIcon,
@@ -85,13 +84,11 @@ function AppearanceSection() {
 
 function BackupSection() {
     const {
-        exportJsonState,
-        importJsonState,
-        exportCsvState,
-        exportJsonBackup,
-        importJsonBackup,
-        exportCsvBackup,
-        resetImportJsonState,
+        exportState,
+        importState,
+        exportBackup,
+        importBackup,
+        resetImportState,
     } = useBackup()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -105,7 +102,7 @@ function BackupSection() {
         )
         if (!proceed) return
 
-        void importJsonBackup(file)
+        void importBackup(file)
     }
 
     return (
@@ -116,34 +113,34 @@ function BackupSection() {
                 </h2>
                 <p className="text-xs text-muted-foreground">
                     Export a full backup (topics, folders, and sessions) as JSON,
-                    or export sessions only as CSV for data analysis.
+                    or restore from a previous backup.
                 </p>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                    <p className="text-sm text-foreground">Export full backup</p>
+                    <p className="text-sm text-foreground">Export backup</p>
                     <p className="text-xs text-muted-foreground">
                         Download everything as a JSON file.
                     </p>
                 </div>
                 <button
                     type="button"
-                    onClick={() => void exportJsonBackup()}
-                    disabled={exportJsonState.status === "working"}
+                    onClick={() => void exportBackup()}
+                    disabled={exportState.status === "working"}
                     className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                 >
                     <DownloadIcon className="h-4 w-4" />
-                    {exportJsonState.status === "working"
+                    {exportState.status === "working"
                         ? "Exporting…"
-                        : "Export JSON"}
+                        : "Export backup"}
                 </button>
             </div>
-            {exportJsonState.status === "success" && (
-                <StatusLine tone="success">{exportJsonState.message}</StatusLine>
+            {exportState.status === "success" && (
+                <StatusLine tone="success">{exportState.message}</StatusLine>
             )}
-            {exportJsonState.status === "error" && (
-                <StatusLine tone="error">{exportJsonState.message}</StatusLine>
+            {exportState.status === "error" && (
+                <StatusLine tone="error">{exportState.message}</StatusLine>
             )}
 
             <div className="border-t pt-4">
@@ -158,13 +155,13 @@ function BackupSection() {
                     <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        disabled={importJsonState.status === "working"}
+                        disabled={importState.status === "working"}
                         className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
                     >
                         <UploadIcon className="h-4 w-4" />
-                        {importJsonState.status === "working"
+                        {importState.status === "working"
                             ? "Importing…"
-                            : "Import JSON"}
+                            : "Import backup"}
                     </button>
                     <input
                         ref={fileInputRef}
@@ -174,43 +171,15 @@ function BackupSection() {
                         onChange={handleFileChange}
                     />
                 </div>
-                {importJsonState.status === "success" && (
-                    <StatusLine tone="success" onDismiss={resetImportJsonState}>
-                        {importJsonState.message}
+                {importState.status === "success" && (
+                    <StatusLine tone="success" onDismiss={resetImportState}>
+                        {importState.message}
                     </StatusLine>
                 )}
-                {importJsonState.status === "error" && (
-                    <StatusLine tone="error" onDismiss={resetImportJsonState}>
-                        {importJsonState.message}
+                {importState.status === "error" && (
+                    <StatusLine tone="error" onDismiss={resetImportState}>
+                        {importState.message}
                     </StatusLine>
-                )}
-            </div>
-
-            <div className="border-t pt-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <p className="text-sm text-foreground">Export sessions CSV</p>
-                        <p className="text-xs text-muted-foreground">
-                            Download performance data only as CSV.
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => void exportCsvBackup()}
-                        disabled={exportCsvState.status === "working"}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:pointer-events-none disabled:opacity-50"
-                    >
-                        <FileDownIcon className="h-4 w-4" />
-                        {exportCsvState.status === "working"
-                            ? "Exporting…"
-                            : "Export CSV"}
-                    </button>
-                </div>
-                {exportCsvState.status === "success" && (
-                    <StatusLine tone="success">{exportCsvState.message}</StatusLine>
-                )}
-                {exportCsvState.status === "error" && (
-                    <StatusLine tone="error">{exportCsvState.message}</StatusLine>
                 )}
             </div>
         </section>
