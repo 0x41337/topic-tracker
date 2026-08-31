@@ -95,11 +95,19 @@ export function useBackup() {
     const exportCsvBackup = useCallback(async () => {
         setExportCsvState({ status: "working" })
         try {
-            const records = await db.performances.toArray()
+            const [records, topics] = await Promise.all([
+                db.performances.toArray(),
+                db.topics.toArray(),
+            ])
+            const topicMap = new Map(topics.map((t) => [t.id, t.name]))
+
             const header = "topic|hits|total|date"
-            const rows = records.map(
-                (r) => `${r.topic}|${r.hits}|${r.total}|${r.date}`,
-            )
+            const rows = records
+                .filter((r) => topicMap.has(r.topicId))
+                .map((r) => {
+                    const name = topicMap.get(r.topicId) ?? r.topic
+                    return `${name}|${r.hits}|${r.total}|${r.date}`
+                })
             const csv = [header, ...rows].join("\n")
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
             const url = URL.createObjectURL(blob)
