@@ -101,13 +101,24 @@ export function useBackup() {
             ])
             const topicMap = new Map(topics.map((t) => [t.id, t.name]))
 
+            const aggregated = new Map<string, { topic: string; hits: number; total: number; date: string }>()
+            for (const r of records) {
+                const name = topicMap.get(r.topicId)
+                if (!name || r.total === 0) continue
+                const key = `${name}|${r.date}`
+                const existing = aggregated.get(key)
+                if (existing) {
+                    existing.hits += r.hits
+                    existing.total += r.total
+                } else {
+                    aggregated.set(key, { topic: name, hits: r.hits, total: r.total, date: r.date })
+                }
+            }
+
             const header = "topic|hits|total|date"
-            const rows = records
-                .filter((r) => topicMap.has(r.topicId))
-                .map((r) => {
-                    const name = topicMap.get(r.topicId) ?? r.topic
-                    return `${name}|${r.hits}|${r.total}|${r.date}`
-                })
+            const rows = [...aggregated.values()]
+                .sort((a, b) => a.date.localeCompare(b.date) || a.topic.localeCompare(b.topic))
+                .map((r) => `${r.topic}|${r.hits}|${r.total}|${r.date}`)
             const csv = [header, ...rows].join("\n")
             const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
             const url = URL.createObjectURL(blob)
