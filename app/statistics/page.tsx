@@ -98,22 +98,6 @@ export default function StatisticsPage() {
                     </p>
                 </div>
                 <ActivityHeatmap dailyPoints={dailyPoints} />
-                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <span>Lower accuracy</span>
-                    <div className="flex items-center gap-1">
-                        {[0.25, 0.5, 0.75, 1].map((o) => (
-                            <span
-                                key={o}
-                                className="size-3 rounded-sm"
-                                style={{
-                                    backgroundColor: "var(--primary)",
-                                    opacity: o,
-                                }}
-                            />
-                        ))}
-                    </div>
-                    <span>Higher accuracy</span>
-                </div>
             </div>
 
             <OverallTrendChart dailyPoints={dailyPoints} />
