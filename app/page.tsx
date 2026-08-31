@@ -184,8 +184,7 @@ export default function Home() {
                         >
                             <MousePointerClickIcon className="h-5 w-5" />
                             <p className="text-sm">
-                                Select a folder or topic to see its details
-                                here.
+                                Select an item to see details
                             </p>
                         </motion.div>
                     )}

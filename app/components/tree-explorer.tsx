@@ -327,9 +327,7 @@ export function TreeView({
                 <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-sm text-muted-foreground">
                     <FolderIcon className="h-6 w-6 text-muted-foreground/40" />
                     <span>
-                        No topics or folders yet.
-                        <br />
-                        Use the buttons above to create one.
+                        No items yet.
                     </span>
                 </div>
             ) : (

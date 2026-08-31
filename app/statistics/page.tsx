@@ -44,7 +44,7 @@ export default function StatisticsPage() {
             <div className="mx-auto flex w-full max-w-[1400px] flex-col items-center justify-center gap-2 p-4 py-24 text-center lg:p-6">
                 <ListChecksIcon className="h-6 w-6 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">
-                    Add a topic and log a few sessions to see your stats here.
+                    No data yet. Log some sessions first.
                 </p>
             </div>
         )
@@ -94,8 +94,7 @@ export default function StatisticsPage() {
                         Activity
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                        Each square is a day — darker means better accuracy that
-                        day
+                        Each square is a day
                     </p>
                 </div>
                 <ActivityHeatmap dailyPoints={dailyPoints} />

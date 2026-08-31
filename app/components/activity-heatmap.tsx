@@ -124,7 +124,7 @@ export function ActivityHeatmap({ dailyPoints }: ActivityHeatmapProps) {
                             key={cell.date}
                             title={
                                 cell.total === 0
-                                    ? `${cell.date} — sem sessões`
+                                    ? `${cell.date} — no sessions`
                                     : `${cell.date} — ${cell.hits}/${cell.total} (${Math.round(
                                           (cell.accuracy ?? 0) * 100,
                                       )}%)`
