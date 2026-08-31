@@ -32,7 +32,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <body className="min-h-full">
                 <ClientSidebarProvider>
                     <AppSidebar />
-                    <SidebarInset>
+                    <SidebarInset className="overflow-x-hidden">
                         {/*
                           Visible only below md. This is the only way to open the
                           sidebar on mobile: the Sidebar itself renders as an
