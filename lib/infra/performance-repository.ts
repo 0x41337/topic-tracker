@@ -73,8 +73,22 @@ export class DexiePerformanceRepository implements PerformanceRepository {
 
     async importCSV(csv: string): Promise<void> {
         const records = parseCSV(csv)
-        const topics = await db.topics.toArray()
-        const nameToId = new Map(topics.map((t) => [t.name, t.id]))
+        const existingTopics = await db.topics.toArray()
+        const nameToId = new Map(existingTopics.map((t) => [t.name, t.id]))
+
+        const topicNames = new Set(records.map((r) => r.topic))
+        for (const name of topicNames) {
+            if (nameToId.has(name)) continue
+            const id = crypto.randomUUID()
+            await db.topics.add({
+                id,
+                name,
+                parentId: null,
+                isFolder: false,
+                createdAt: new Date().toISOString(),
+            })
+            nameToId.set(name, id)
+        }
 
         await db.performances.bulkPut(
             records.map((r) => ({
