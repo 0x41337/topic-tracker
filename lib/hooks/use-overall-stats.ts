@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { PerformanceRecord, TopicNode } from "../core/types"
 import { DexieTopicRepository } from "../infra/topic-repository"
-// NOTE: ajuste este import se a sua implementação Dexie da PerformanceRepository
-// tiver outro nome/caminho — segui a mesma convenção do DexieTopicRepository acima.
+// NOTE: adjust this import if your Dexie PerformanceRepository
+// implementation has a different name/path — following the same
+// convention as DexieTopicRepository above.
 import { DexiePerformanceRepository } from "../infra/performance-repository"
 
 const topicRepo = new DexieTopicRepository()
@@ -52,9 +53,10 @@ export function useOverallStats() {
         const topicNodes = allNodes.filter((n) => !n.isFolder)
         if (!mountedRef.current || thisLoad !== loadRef.current) return
 
-        // Uma leitura de histórico por tópico, em paralelo. Funciona bem até
-        // algumas centenas de tópicos; se a lista crescer muito, vale expor um
-        // getAllHistory() na PerformanceRepository para uma única query.
+        // One history read per topic, in parallel. Works well up to
+        // a few hundred topics; if the list grows much larger,
+        // consider exposing a getAllHistory() in PerformanceRepository
+        // for a single query.
         const histories = await Promise.all(
             topicNodes.map((t) => performanceRepo.getHistory(t.id)),
         )
@@ -146,8 +148,8 @@ export function useOverallStats() {
         const today = new Date().toISOString().slice(0, 10)
         let cursor = today
         if (!activeDates.has(cursor)) {
-            // Hoje ainda sem sessão não deve, sozinho, zerar uma sequência
-            // construída até ontem.
+            // Today without a session should not, by itself, break a streak
+            // that was built up until yesterday.
             const d = new Date(`${cursor}T00:00:00.000Z`)
             d.setUTCDate(d.getUTCDate() - 1)
             cursor = d.toISOString().slice(0, 10)
