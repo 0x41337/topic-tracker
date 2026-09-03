@@ -1,4 +1,4 @@
-import type { TopicNode, PerformanceRecord } from "./types"
+import type { TopicNode, PerformanceRecord, ActionRecord } from "./types"
 
 export interface TopicRepository {
     getAll(): Promise<TopicNode[]>
@@ -20,4 +20,5 @@ export interface PerformanceRepository {
     recordMiss(topicId: string, date: string): Promise<void>
     undoLastAction(topicId: string, date: string): Promise<boolean>
     getHistory(topicId: string): Promise<PerformanceRecord[]>
+    getLastAction(topicId: string, date: string): Promise<ActionRecord | undefined>
 }

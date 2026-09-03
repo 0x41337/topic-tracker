@@ -14,6 +14,14 @@ export interface PerformanceRecord {
     total: number
 }
 
+export interface ActionRecord {
+    id?: number
+    topicId: string
+    date: string
+    type: "hit" | "miss"
+    timestamp: number
+}
+
 export interface Score {
     hits: number
     total: number

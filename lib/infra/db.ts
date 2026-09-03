@@ -1,9 +1,10 @@
 import Dexie, { type Table } from "dexie"
-import type { TopicNode, PerformanceRecord } from "../core/types"
+import type { TopicNode, PerformanceRecord, ActionRecord } from "../core/types"
 
 class TopicTrackerDB extends Dexie {
     topics!: Table<TopicNode>
     performances!: Table<PerformanceRecord>
+    actionHistory!: Table<ActionRecord>
 
     constructor() {
         super("topic-tracker")
@@ -20,6 +21,9 @@ class TopicTrackerDB extends Dexie {
                 }
             })
         )
+        this.version(3).stores({
+            actionHistory: "++id, topicId, date, type, timestamp",
+        })
     }
 }
 

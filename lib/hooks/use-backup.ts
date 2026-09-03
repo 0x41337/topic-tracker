@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react"
 import { db } from "../infra/db"
-import type { TopicNode, PerformanceRecord } from "../core/types"
+import type { TopicNode, PerformanceRecord, ActionRecord } from "../core/types"
 
 export type BackupState =
     | { status: "idle" }
@@ -11,9 +11,10 @@ export type BackupState =
     | { status: "error"; message: string }
 
 interface BackupData {
-    version: 1
+    version: 2
     topics: TopicNode[]
     performances: PerformanceRecord[]
+    actionHistory: ActionRecord[]
 }
 
 export function useBackup() {
@@ -29,10 +30,12 @@ export function useBackup() {
         try {
             const topics = await db.topics.toArray()
             const performances = await db.performances.toArray()
+            const actionHistory = await db.actionHistory.toArray()
             const data: BackupData = {
-                version: 1,
+                version: 2,
                 topics,
                 performances,
+                actionHistory,
             }
             const json = JSON.stringify(data, null, 2)
             const blob = new Blob([json], { type: "application/json" })
@@ -65,14 +68,20 @@ export function useBackup() {
                 throw new Error("Invalid backup format")
             }
 
-            await db.transaction("rw", [db.topics, db.performances], async () => {
+            const actionHistory = Array.isArray(data.actionHistory) ? data.actionHistory : []
+
+            await db.transaction("rw", [db.topics, db.performances, db.actionHistory], async () => {
                 await db.topics.clear()
                 await db.performances.clear()
+                await db.actionHistory.clear()
                 if (data.topics.length > 0) {
                     await db.topics.bulkAdd(data.topics)
                 }
                 if (data.performances.length > 0) {
                     await db.performances.bulkAdd(data.performances)
+                }
+                if (actionHistory.length > 0) {
+                    await db.actionHistory.bulkAdd(actionHistory)
                 }
             })
 
