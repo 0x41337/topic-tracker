@@ -38,7 +38,6 @@ Next.js 16.3.3 + React 19 + Tailwind CSS 4 app. Bun 1.3.14 is the package manage
 - `lib/core/` — Business logic: domain types (`types.ts`), repository interfaces (`repository.ts`), scoring logic (`score.ts`). Zero React/UI imports.
 - `lib/infra/` — Dexie.js implementations of repository interfaces (IndexedDB).
 - `lib/hooks/` — React adapters bridging core ↔ UI.
-- `lib/mock/` — Mock data for development/testing.
 
 ## Notes for agents
 

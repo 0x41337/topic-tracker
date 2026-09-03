@@ -1,5 +1,11 @@
 import type { NextConfig } from "next"
 
-const nextConfig: NextConfig = {/* config options here */}
+const nextConfig: NextConfig = {
+    output: "export",
+    basePath: "/topic-tracker",
+    images: {
+        unoptimized: true,
+    },
+}
 
 export default nextConfig
