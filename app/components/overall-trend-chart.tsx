@@ -81,7 +81,7 @@ export function OverallTrendChart({ dailyPoints }: OverallTrendChartProps) {
                 <ChartContainer config={chartConfig} className="h-48 w-full">
                     <LineChart
                         data={data}
-                        margin={{ top: 5, right: 5, left: -20, bottom: 0 }}
+                        margin={{ top: 5, right: 5, left: 0, bottom: 0 }}
                     >
                         <CartesianGrid
                             vertical={false}
@@ -106,7 +106,7 @@ export function OverallTrendChart({ dailyPoints }: OverallTrendChartProps) {
                             tick={{ fontSize: 10 }}
                             tickLine={false}
                             axisLine={false}
-                            width={32}
+                            width={40}
                         />
                         <ChartTooltip
                             content={

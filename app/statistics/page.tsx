@@ -9,7 +9,6 @@ import {
 } from "lucide-react"
 
 import { useOverallStats } from "@/lib/hooks/use-overall-stats"
-import { ActivityHeatmap } from "@/app/components/activity-heatmap"
 import { OverallTrendChart } from "@/app/components/overall-trend-chart"
 import { TopicBreakdownList } from "@/app/components/topic-breakdown-list"
 
@@ -79,25 +78,13 @@ export default function StatisticsPage() {
                 <SummaryTile
                     icon={<ListChecksIcon className="h-4 w-4" />}
                     label="Topics practiced"
-                    value={`${overall.topicsWithActivity}/${overall.topicsTracked}`}
+                    value={`${overall.topicsWithActivity}`}
                 />
                 <SummaryTile
                     icon={<ActivityIcon className="h-4 w-4" />}
                     label="Attempts logged"
                     value={`${overall.total}`}
                 />
-            </div>
-
-            <div className="space-y-3 rounded-lg border bg-card p-4">
-                <div>
-                    <h3 className="text-sm font-semibold text-foreground">
-                        Activity
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                        Each square is a day
-                    </p>
-                </div>
-                <ActivityHeatmap dailyPoints={dailyPoints} />
             </div>
 
             <OverallTrendChart dailyPoints={dailyPoints} />
@@ -117,12 +104,12 @@ function SummaryTile({
     value: string
 }) {
     return (
-        <div className="rounded-lg border bg-card p-4">
+        <div className="min-w-0 rounded-lg border bg-card p-4">
             <div className="flex items-center gap-1.5 text-muted-foreground">
                 {icon}
-                <span className="text-xs font-medium">{label}</span>
+                <span className="truncate text-xs font-medium">{label}</span>
             </div>
-            <p className="mt-1.5 text-2xl font-semibold tabular-nums text-foreground">
+            <p className="mt-1.5 text-2xl font-semibold tabular-nums text-foreground sm:text-3xl">
                 {value}
             </p>
         </div>
