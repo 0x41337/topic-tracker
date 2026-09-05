@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { PerformanceRecord, Score } from "../core/types"
-import { calculateScore, getToday } from "../core/score"
-import { DexiePerformanceRepository } from "../infra/performance-repository"
+import type { PerformanceRecord, Score } from "../features/performance/types"
+import { calculateScore, getToday } from "../features/performance/score"
+import { DexiePerformanceRepository } from "../features/performance/dexie-repository"
 
 const repo = new DexiePerformanceRepository()
 

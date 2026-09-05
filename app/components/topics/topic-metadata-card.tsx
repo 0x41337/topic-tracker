@@ -1,6 +1,6 @@
 "use client"
 
-import type { TreeNodeData } from "@/lib/core/tree-types"
+import type { TreeNodeData } from "@/lib/features/topics/types"
 
 interface TopicMetadataCardProps {
     item: TreeNodeData

@@ -1,41 +1,16 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { PerformanceRecord, TopicNode } from "../core/types"
-import { DexieTopicRepository } from "../infra/topic-repository"
-// NOTE: adjust this import if your Dexie PerformanceRepository
-// implementation has a different name/path — following the same
-// convention as DexieTopicRepository above.
-import { DexiePerformanceRepository } from "../infra/performance-repository"
+import type { TopicNode } from "../features/topics/types"
+import type { PerformanceRecord } from "../features/performance/types"
+import type { TopicSummary, DailyPoint, OverallSummary, OverallStatus } from "../features/statistics/types"
+import { DexieTopicRepository } from "../features/topics/dexie-repository"
+import { DexiePerformanceRepository } from "../features/performance/dexie-repository"
+
+export type { OverallStatus, DailyPoint, TopicSummary, OverallSummary }
 
 const topicRepo = new DexieTopicRepository()
 const performanceRepo = new DexiePerformanceRepository()
-
-export type OverallStatus = "loading" | "empty" | "content"
-
-export interface DailyPoint {
-    date: string
-    hits: number
-    total: number
-    accuracy: number | null
-}
-
-export interface TopicSummary {
-    topicId: string
-    name: string
-    hits: number
-    total: number
-    accuracy: number | null
-    lastActive: string | null
-}
-
-export interface OverallSummary {
-    hits: number
-    total: number
-    accuracy: number | null
-    topicsTracked: number
-    topicsWithActivity: number
-}
 
 export function useOverallStats() {
     const [status, setStatus] = useState<OverallStatus>("loading")

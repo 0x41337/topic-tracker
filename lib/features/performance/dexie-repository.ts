@@ -1,6 +1,6 @@
-import { db } from "./db"
-import type { PerformanceRepository } from "../core/repository"
-import type { PerformanceRecord, ActionRecord } from "../core/types"
+import { db } from "@/lib/infra/db"
+import type { PerformanceRepository } from "./repository"
+import type { PerformanceRecord, ActionRecord } from "./types"
 
 export class DexiePerformanceRepository implements PerformanceRepository {
     async get(

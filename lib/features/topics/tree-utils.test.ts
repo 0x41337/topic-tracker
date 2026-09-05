@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test"
-import { createNodeId, getUniqueName, collectDescendantIds } from "./tree-data"
-import type { TreeDataMap } from "./tree-types"
+import { createNodeId, getUniqueName, collectDescendantIds } from "./tree-utils"
+import type { TreeDataMap } from "./types"
 
 describe("createNodeId", () => {
     it("returns a string starting with the given type", () => {

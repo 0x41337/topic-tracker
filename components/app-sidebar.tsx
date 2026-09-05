@@ -20,6 +20,7 @@ import { Logo } from "@/components/logo"
 import Link from "next/link"
 
 import { SettingsIcon, ChartAreaIcon, FolderTreeIcon } from "lucide-react"
+import { isEnabled } from "@/lib/features/flags/flags"
 
 export function AppSidebar() {
     const sidebar = useSidebar()
@@ -68,24 +69,28 @@ export function AppSidebar() {
             <SidebarContent>
                 <SidebarGroup>
                     <SidebarMenu>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                onClick={closeOnMobile}
-                                render={<Link href="/" />}
-                            >
-                                <FolderTreeIcon />
-                                Topics
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
-                        <SidebarMenuItem>
-                            <SidebarMenuButton
-                                onClick={closeOnMobile}
-                                render={<Link href="/statistics" />}
-                            >
-                                <ChartAreaIcon />
-                                Statistics
-                            </SidebarMenuButton>
-                        </SidebarMenuItem>
+                        {isEnabled("topics") && (
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    onClick={closeOnMobile}
+                                    render={<Link href="/" />}
+                                >
+                                    <FolderTreeIcon />
+                                    Topics
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )}
+                        {isEnabled("statistics") && (
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    onClick={closeOnMobile}
+                                    render={<Link href="/statistics" />}
+                                >
+                                    <ChartAreaIcon />
+                                    Statistics
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                        )}
                     </SidebarMenu>
                 </SidebarGroup>
             </SidebarContent>
