@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import type { PerformanceRecord } from "@/lib/core/types"
+import type { PerformanceRecord } from "@/lib/features/performance/types"
 import {
     ChartContainer,
     ChartTooltip,

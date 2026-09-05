@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import type { Score } from "@/lib/core/types"
+import type { Score } from "@/lib/features/performance/types"
 
 interface TopicSessionCardProps {
     score: Score

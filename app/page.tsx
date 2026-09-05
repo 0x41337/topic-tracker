@@ -13,15 +13,15 @@ import {
 } from "lucide-react"
 
 import { useTreeData } from "@/lib/hooks/use-tree-data"
-import { useTreeExplorer, TreeView } from "@/app/components/tree-explorer"
-import type { TreeNodeData } from "@/lib/core/tree-types"
+import { useTreeExplorer, TreeView } from "@/app/components/topics/tree-explorer"
+import type { TreeNodeData } from "@/lib/features/topics/types"
 import { usePerformance } from "@/lib/hooks/use-performance"
 import { SearchBar } from "@/app/components/search-bar"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { TopicMetadataCard } from "@/app/components/topic-metadata-card"
-import { TopicStatsCard } from "@/app/components/topic-stats-card"
-import { TopicSessionCard } from "@/app/components/topic-session-card"
+import { TopicMetadataCard } from "@/app/components/topics/topic-metadata-card"
+import { TopicStatsCard } from "@/app/components/topics/topic-stats-card"
+import { TopicSessionCard } from "@/app/components/topics/topic-session-card"
 
 export default function Home() {
     const { data, status, setData } = useTreeData()

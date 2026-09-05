@@ -9,8 +9,8 @@ import {
 } from "lucide-react"
 
 import { useOverallStats } from "@/lib/hooks/use-overall-stats"
-import { OverallTrendChart } from "@/app/components/overall-trend-chart"
-import { TopicBreakdownList } from "@/app/components/topic-breakdown-list"
+import { OverallTrendChart } from "@/app/components/statistics/overall-trend-chart"
+import { TopicBreakdownList } from "@/app/components/statistics/topic-breakdown-list"
 
 export default function StatisticsPage() {
     const { status, overall, streak, dailyPoints, topicSummaries } =

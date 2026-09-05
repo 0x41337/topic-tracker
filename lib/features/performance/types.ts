@@ -1,11 +1,3 @@
-export interface TopicNode {
-    id: string
-    name: string
-    parentId: string | null
-    isFolder: boolean
-    createdAt: string
-}
-
 export interface PerformanceRecord {
     topicId: string
     topic: string

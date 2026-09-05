@@ -1,6 +1,6 @@
-import { db } from "./db"
-import type { TopicRepository } from "../core/repository"
-import type { TopicNode } from "../core/types"
+import { db } from "@/lib/infra/db"
+import type { TopicRepository } from "./repository"
+import type { TopicNode } from "./types"
 
 export class DexieTopicRepository implements TopicRepository {
     async getAll(): Promise<TopicNode[]> {

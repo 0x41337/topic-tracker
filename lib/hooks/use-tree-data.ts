@@ -1,10 +1,11 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import type { TopicNode } from "../core/types"
-import type { TreeDataMap, TreeNodeData } from "../core/tree-types"
-import { ROOT_ID } from "../core/tree-types"
-import { DexieTopicRepository } from "../infra/topic-repository"
+import type { TopicNode, TreeDataMap, TreeNodeData, TreeStatus } from "../features/topics/types"
+import { ROOT_ID } from "../features/topics/types"
+import { DexieTopicRepository } from "../features/topics/dexie-repository"
+
+export type { TreeStatus }
 
 const repo = new DexieTopicRepository()
 
@@ -57,8 +58,6 @@ function treeDataMapToNodes(data: TreeDataMap): TopicNode[] {
 
     return nodes
 }
-
-export type TreeStatus = "loading" | "empty" | "content"
 
 export function useTreeData() {
     const [data, setData] = useState<TreeDataMap>({})

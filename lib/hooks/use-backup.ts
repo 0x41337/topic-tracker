@@ -1,21 +1,12 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { db } from "../infra/db"
-import type { TopicNode, PerformanceRecord, ActionRecord } from "../core/types"
+import { DexieBackupRepository } from "../features/backup/dexie-repository"
+import type { BackupState, BackupData } from "../features/backup/types"
 
-export type BackupState =
-    | { status: "idle" }
-    | { status: "working" }
-    | { status: "success"; message: string }
-    | { status: "error"; message: string }
+export type { BackupState }
 
-interface BackupData {
-    version: 2
-    topics: TopicNode[]
-    performances: PerformanceRecord[]
-    actionHistory: ActionRecord[]
-}
+const repo = new DexieBackupRepository()
 
 export function useBackup() {
     const [exportState, setExportState] = useState<BackupState>({
@@ -28,15 +19,7 @@ export function useBackup() {
     const exportBackup = useCallback(async () => {
         setExportState({ status: "working" })
         try {
-            const topics = await db.topics.toArray()
-            const performances = await db.performances.toArray()
-            const actionHistory = await db.actionHistory.toArray()
-            const data: BackupData = {
-                version: 2,
-                topics,
-                performances,
-                actionHistory,
-            }
+            const data = await repo.exportAll()
             const json = JSON.stringify(data, null, 2)
             const blob = new Blob([json], { type: "application/json" })
             const url = URL.createObjectURL(blob)
@@ -64,26 +47,19 @@ export function useBackup() {
             const text = await file.text()
             const data = JSON.parse(text) as BackupData
 
-            if (!data.version || !Array.isArray(data.topics) || !Array.isArray(data.performances)) {
+            if (
+                !data.version ||
+                !Array.isArray(data.topics) ||
+                !Array.isArray(data.performances)
+            ) {
                 throw new Error("Invalid backup format")
             }
 
-            const actionHistory = Array.isArray(data.actionHistory) ? data.actionHistory : []
+            data.actionHistory = Array.isArray(data.actionHistory)
+                ? data.actionHistory
+                : []
 
-            await db.transaction("rw", [db.topics, db.performances, db.actionHistory], async () => {
-                await db.topics.clear()
-                await db.performances.clear()
-                await db.actionHistory.clear()
-                if (data.topics.length > 0) {
-                    await db.topics.bulkAdd(data.topics)
-                }
-                if (data.performances.length > 0) {
-                    await db.performances.bulkAdd(data.performances)
-                }
-                if (actionHistory.length > 0) {
-                    await db.actionHistory.bulkAdd(actionHistory)
-                }
-            })
+            await repo.importAll(data)
 
             setImportState({
                 status: "success",

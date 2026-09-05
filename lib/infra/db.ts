@@ -1,5 +1,6 @@
 import Dexie, { type Table } from "dexie"
-import type { TopicNode, PerformanceRecord, ActionRecord } from "../core/types"
+import type { TopicNode } from "../features/topics/types"
+import type { PerformanceRecord, ActionRecord } from "../features/performance/types"
 
 class TopicTrackerDB extends Dexie {
     topics!: Table<TopicNode>
