@@ -123,7 +123,7 @@ export function OverallTrendChart({ dailyPoints }: OverallTrendChartProps) {
                                     }
                                     formatter={(value, name) =>
                                         name === "accuracy"
-                                            ? [`${value}%`, "Accuracy"]
+                                            ? [`${value}% `, "Accuracy"]
                                             : [value, name]
                                     }
                                 />
